@@ -1,0 +1,23 @@
+# Ignore everything
+*
+
+# Allow .gitignore itself
+!.gitignore
+
+# Allow the 5.0 folder
+!5.0/
+
+# Ignore everything inside 5.0
+5.0/*
+
+# Allow only selected folders
+!5.0/src/
+!5.0/sql/
+!5.0/websrc/
+!5.0/tddml/
+
+# Allow contents of selected folders
+!5.0/src/**
+!5.0/sql/**
+!5.0/websrc/**
+!5.0/tddml/**
