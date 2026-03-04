@@ -9,6 +9,22 @@ import com.thera.thermfw.persist.KeyHelper;
 
 import it.thera.thip.vendite.ordineVE.OrdineVendita;
 
+/**
+*
+* <p></p>
+*
+* <p>
+* Company: Softre Solutions<br>
+* Author: Andrea Gatta<br>
+* Date: 04/03/2026
+* </p>
+*/
+
+/*
+* Revisions:
+* Number	Date		Owner	Description
+* 72387	04/03/2026	AGSOF3	Attributo di servizio chiave doc dgt (per magic)
+*/
 public class YOrdineVendita extends OrdineVendita {
 
 	protected String iYKeyDocDgt;//aggiunto per esposizione in ws magic

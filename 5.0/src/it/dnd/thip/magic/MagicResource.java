@@ -34,6 +34,7 @@ import com.thera.thermfw.rs.BaseResource;
  * Revisions:
  * Number	Date		Owner	Description
  * 72066    24/07/2025  AGSOF3  Prima stesura
+ * 72387	04/03/2026	AGSOF3	lista prezzi
  */
 
 @Path("/dnd")
@@ -89,4 +90,12 @@ public class MagicResource extends BaseResource {
 	    return buildResponse(status, response);
 	}
 	
+	@Path("/prezzi/list")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response creaOrdineVendita(String body) {
+		
+		return null;
+	}
 }

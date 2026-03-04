@@ -44,6 +44,7 @@ import it.thera.thip.vendite.ordineVE.OrdineVenditaTM;
  * Revisions:
  * Number	Date		Owner	Description
  * 72066    24/07/2025  AGSOF3  Prima stesura
+ * 72387	04/03/2026	AGSOF3	lista prezzi
  */
 
 public class MagicService {
