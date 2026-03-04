@@ -192,62 +192,63 @@ public class MagicService {
 
 	@SuppressWarnings("unchecked")
 	public JSONObject listaPrezzi(JSONArray items) {
+
 	    JSONArray resultArray = new JSONArray();
-	    try {
-	        RicercaPrezzoEcomm rp = new RicercaPrezzoEcomm();
-	        rp.setCompany(Azienda.getAziendaCorrente());
-	        rp.setUseAuthentication(false);
 
-	        Map<String, Object> appParams = rp.getAppParams();
-	        appParams.put("codListino", "395");
+	    for (int i = 0; i < items.length(); i++) {
 
-	        for (int i = 0; i < items.length(); i++) {
+	        JSONObject item = items.getJSONObject(i);
 
-	            JSONObject item = items.getJSONObject(i);
+	        String idArticolo = item.optString("idArticolo");
+	        String idCliente = item.optString("idCliente");
 
-	            String idArticolo = item.optString("idArticolo");
-	            String idCliente = item.optString("idCliente");
+	        BigDecimal prezzo = BigDecimal.ZERO;
+	        String error = null;
 
-	            BigDecimal prezzo = BigDecimal.ZERO;
-	            String error = null;
+	        try {
 
-	            try {
+	            RicercaPrezzoEcomm rp = new RicercaPrezzoEcomm();
+	            rp.setCompany(Azienda.getAziendaCorrente());
+	            rp.setUseAuthentication(false);
 
-	                appParams.put("codCliente", idCliente);
-	                appParams.put("codArticolo", idArticolo);
+	            Map<String, Object> appParams = rp.getAppParams();
+	            appParams.put("codCliente", idCliente);
+	            appParams.put("codArticolo", idArticolo);
+	            appParams.put("codListino", "395");
 
-	                rp.setAppParams(appParams);
+	            rp.setAppParams(appParams);
 
-	                Map<String, Object> result = rp.send();
+	            Map<String, Object> result = rp.send();
+
+	            Object errorsObj = result.get("errors");
+
+	            if (errorsObj instanceof List && !((List<?>) errorsObj).isEmpty()) {
+
+	                Map<String, Object> errorMap = (Map<String, Object>) ((List<?>) errorsObj).get(0);
+	                error = errorMap.values().iterator().next().toString();
+
+	            } else {
 
 	                BigDecimal p = (BigDecimal) result.get("prezzo");
 	                if (p != null) {
 	                    prezzo = p;
 	                }
-
-	            } catch (Exception e) {
-	                error = e.getMessage();
 	            }
 
-	            JSONObject prezzoObj = new JSONObject();
-	            prezzoObj.put("idArticolo", idArticolo);
-	            prezzoObj.put("idCliente", idCliente);
-	            prezzoObj.put("prezzo", prezzo);
-
-	            if (error != null) {
-	                prezzoObj.put("error", error);
-	            }
-
-	            resultArray.put(prezzoObj);
+	        } catch (Exception e) {
+	            error = e.getMessage();
 	        }
 
-	    } catch (Exception e) {
-	        JSONObject result = new JSONObject();
-	        result.put("status", Status.INTERNAL_SERVER_ERROR);
-	        JSONObject response = new JSONObject();
-	        response.put("message", "Error retrieving prices: " + e.getMessage());
-	        result.put("response", response);
-	        return result;
+	        JSONObject prezzoObj = new JSONObject();
+	        prezzoObj.put("idArticolo", idArticolo);
+	        prezzoObj.put("idCliente", idCliente);
+	        prezzoObj.put("prezzo", prezzo);
+
+	        if (error != null) {
+	            prezzoObj.put("error", error);
+	        }
+
+	        resultArray.put(prezzoObj);
 	    }
 
 	    JSONObject response = new JSONObject();
