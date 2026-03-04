@@ -1,4 +1,4 @@
-package it.dnd.thip.vendite.ordineVE;
+package it.dnd.thip.vendite.documentoVE;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,9 +7,9 @@ import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.persist.CachedStatement;
 import com.thera.thermfw.persist.KeyHelper;
 
-import it.thera.thip.vendite.ordineVE.OrdineVendita;
+import it.thera.thip.vendite.documentoVE.FatturaVendita;
 
-public class YOrdineVendita extends OrdineVendita {
+public class YFatturaVendita extends FatturaVendita {
 
 	protected String iYKeyDocDgt;//aggiunto per esposizione in ws magic
 
@@ -19,10 +19,10 @@ public class YOrdineVendita extends OrdineVendita {
 		try {
 			String select = "SELECT ID_AZIENDA , ID_DOCUMENTO_DGT , ID_VERSIONE "
 					+ "FROM THIP.DOC_DGT  "
-					+ "WHERE R_TIPO_DOC_DGT  = 'ORD_VEN' "
+					+ "WHERE R_TIPO_DOC_DGT  = 'FATT_VEN' "
 					+ "AND ID_AZIENDA = '"+getIdAzienda()+"' "
-					+ "AND R_ANNO_DOC = '"+getAnnoDocumento()+"' "
-					+ "AND R_NUMERO_DOC = '"+getNumeroDocumento()+"' "
+					+ "AND R_ANNO_DOC = '"+getIdAnnoFat()+"' "
+					+ "AND R_NUMERO_DOC = '"+getIdNumeroFat()+"' "
 					+ "ORDER BY ID_VERSIONE DESC ";
 			CachedStatement cs = new CachedStatement(select);
 			rs = cs.executeQuery();
