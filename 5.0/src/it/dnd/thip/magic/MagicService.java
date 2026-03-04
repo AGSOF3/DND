@@ -1,9 +1,11 @@
 package it.dnd.thip.magic;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -21,6 +23,7 @@ import it.thera.thip.vendite.documentoVE.DocumentoVendita;
 import it.thera.thip.vendite.documentoVE.DocumentoVenditaTM;
 import it.thera.thip.vendite.documentoVE.FatturaVendita;
 import it.thera.thip.vendite.documentoVE.FatturaVenditaTM;
+import it.thera.thip.vendite.generaleVE.ws.RicercaPrezzoEcomm;
 import it.thera.thip.vendite.ordineVE.OrdineVendita;
 import it.thera.thip.vendite.ordineVE.OrdineVenditaTM;
 
@@ -185,6 +188,77 @@ public class MagicService {
 			}
 		}
 		return total;
+	}
+
+	@SuppressWarnings("unchecked")
+	public JSONObject listaPrezzi(JSONArray items) {
+	    JSONArray resultArray = new JSONArray();
+	    try {
+	        RicercaPrezzoEcomm rp = new RicercaPrezzoEcomm();
+	        rp.setCompany(Azienda.getAziendaCorrente());
+	        rp.setUseAuthentication(false);
+
+	        Map<String, Object> appParams = rp.getAppParams();
+	        appParams.put("codListino", "395");
+
+	        for (int i = 0; i < items.length(); i++) {
+
+	            JSONObject item = items.getJSONObject(i);
+
+	            String idArticolo = item.optString("idArticolo");
+	            String idCliente = item.optString("idCliente");
+
+	            BigDecimal prezzo = BigDecimal.ZERO;
+	            String error = null;
+
+	            try {
+
+	                appParams.put("codCliente", idCliente);
+	                appParams.put("codArticolo", idArticolo);
+
+	                rp.setAppParams(appParams);
+
+	                Map<String, Object> result = rp.send();
+
+	                BigDecimal p = (BigDecimal) result.get("prezzo");
+	                if (p != null) {
+	                    prezzo = p;
+	                }
+
+	            } catch (Exception e) {
+	                error = e.getMessage();
+	            }
+
+	            JSONObject prezzoObj = new JSONObject();
+	            prezzoObj.put("idArticolo", idArticolo);
+	            prezzoObj.put("idCliente", idCliente);
+	            prezzoObj.put("prezzo", prezzo);
+
+	            if (error != null) {
+	                prezzoObj.put("error", error);
+	            }
+
+	            resultArray.put(prezzoObj);
+	        }
+
+	    } catch (Exception e) {
+	        JSONObject result = new JSONObject();
+	        result.put("status", Status.INTERNAL_SERVER_ERROR);
+	        JSONObject response = new JSONObject();
+	        response.put("message", "Error retrieving prices: " + e.getMessage());
+	        result.put("response", response);
+	        return result;
+	    }
+
+	    JSONObject response = new JSONObject();
+	    response.put("count", resultArray.length());
+	    response.put("prezzi", resultArray);
+
+	    JSONObject result = new JSONObject();
+	    result.put("status", Status.OK);
+	    result.put("response", response);
+
+	    return result;
 	}
 
 }

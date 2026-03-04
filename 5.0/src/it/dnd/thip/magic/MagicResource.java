@@ -1,12 +1,17 @@
 package it.dnd.thip.magic;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.thera.thermfw.rs.BaseResource;
@@ -65,6 +70,23 @@ public class MagicResource extends BaseResource {
 		Status status = (Status) result.get("status");
 		JSONObject response = result.getJSONObject("response");
 		return buildResponse(status, response);
+	}
+
+	/**
+	 * Endpoint REST per ottenere i prezzi degli elementi del portafoglio vendite.
+	 *
+	 * @return risposta HTTP contenente un JSON con i dati dei prezzi e lo stato dell'operazione
+	 */
+	@Path("/prezzi/list")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response listaPrezzi(String body) {
+	    JSONArray items = new JSONArray(body);
+	    JSONObject result = service.listaPrezzi(items);
+	    Status status = (Status) result.get("status");
+	    JSONObject response = result.getJSONObject("response");
+	    return buildResponse(status, response);
 	}
 	
 }
