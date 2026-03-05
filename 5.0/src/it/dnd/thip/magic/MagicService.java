@@ -16,21 +16,27 @@ import com.thera.thermfw.ad.ClassADCollection;
 import com.thera.thermfw.ad.ClassADCollectionManager;
 import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.collector.BODataCollector;
+import com.thera.thermfw.collector.CollectionDataCollector;
 import com.thera.thermfw.common.BusinessObject;
 import com.thera.thermfw.persist.CachedStatement;
 import com.thera.thermfw.persist.ConnectionManager;
 import com.thera.thermfw.persist.Factory;
+import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.web.WebForm;
 
+import it.thera.thip.acquisti.ordineAC.OrdineAcquistoRigaPrm;
 import it.thera.thip.base.azienda.Azienda;
+import it.thera.thip.base.documenti.DocumentoBase;
 import it.thera.thip.vendite.documentoVE.DocumentoVendita;
 import it.thera.thip.vendite.documentoVE.DocumentoVenditaTM;
 import it.thera.thip.vendite.documentoVE.FatturaVendita;
 import it.thera.thip.vendite.documentoVE.FatturaVenditaTM;
 import it.thera.thip.vendite.generaleVE.ws.RicercaPrezzoEcomm;
 import it.thera.thip.vendite.ordineVE.OrdineVendita;
+import it.thera.thip.vendite.ordineVE.OrdineVenditaRigaPrm;
 import it.thera.thip.vendite.ordineVE.OrdineVenditaTM;
 import it.thera.thip.vendite.ordineVE.web.OrdineVenditaDataCollector;
+import it.thera.thip.vendite.ordineVE.web.OrdineVenditaRigaPrmDataCollector;
 
 /**
  * Classe di servizio per l’interfaccia Magic.
@@ -277,7 +283,7 @@ public class MagicService {
 		}
 		return null;
 	}
-	
+
 	protected BODataCollector createDataCollector(ClassADCollection classDescriptor) {
 		BODataCollector dataCollector = null;
 		String collectorName = classDescriptor.getBODataCollector();
@@ -289,17 +295,26 @@ public class MagicService {
 		dataCollector.initialize(classDescriptor.getClassName(), true);
 		return dataCollector;
 	}
-	
+
 	public JSONObject creaOrdineVendita(JSONObject body) {
 		JSONObject result = new JSONObject();
 		JSONObject response = new JSONObject();
 		Status status = Status.OK;
-		
 
-	    JSONArray righe = body.getJSONArray("righe");
+		if (!body.has("IdCliente") || !body.has("righe")) {
+		    status = Status.BAD_REQUEST;
+		    response.put("errors", "JSON non valido");
 
-	    // remove rows from header body
-	    body.remove("righe");
+		    result.put("status", status);
+		    result.put("response", response);
+
+		    return result;
+		}
+
+		JSONArray righe = body.getJSONArray("righe");
+
+		// remove rows from header body
+		body.remove("righe");
 
 		OrdineVenditaDataCollector boDC = (OrdineVenditaDataCollector) createDataCollector("OrdineVendita");
 		int mode = WebForm.NEW;		
@@ -308,44 +323,63 @@ public class MagicService {
 			status = Status.FORBIDDEN;
 			response.put("errors", boDC.messages());
 		} else {
+			try {
+				// HEADER
+				for (String key : body.keySet()) {
+					boDC.set(key, body.get(key));
+				}
+				boDC.setAutoCommit(false);
+				boDC.completaDocumento();
+				rcBODC = boDC.save();
 
-	        try {
+				if (rcBODC != BODataCollector.OK) {
+					response.put("errors", boDC.messages());
+					result.put("status", status);
+					result.put("response", response);
+					return result;
+				}else {
+					for (int i = 0; i < righe.length(); i++) {
+						JSONObject riga = righe.getJSONObject(i);
+						OrdineVenditaRigaPrmDataCollector rigaBODC = (OrdineVenditaRigaPrmDataCollector) createDataCollector("OrdineVenditaRigaPrm");
+						int rc = rigaBODC.initSecurityServices(WebForm.NEW, true, true, true);
+						if (rc != BODataCollector.OK) {
+							response.put("errors", rigaBODC.messages());
+							status = Status.INTERNAL_SERVER_ERROR;
+							break;
+						}
+						CollectionDataCollector cdc = (CollectionDataCollector)boDC.getSecondaryDataCollector("Righe");
+						rigaBODC.setOwnerCollectionDC(cdc);
+						((OrdineVenditaRigaPrm)rigaBODC.getBo()).setTestataKey(boDC.getKey());
+						((OrdineVenditaRigaPrm)rigaBODC.getBo()).setTestata((DocumentoBase)boDC.getBo());
 
-	            // HEADER
-	            for (String key : body.keySet()) {
-	                boDC.set(key, body.get(key));
-	            }
-
-	            boDC.setAutoCommit(false);
-	            boDC.completaDocumento();
-	            rcBODC = boDC.save();
-
-	            if (rcBODC != BODataCollector.OK) {
-
-	                response.put("errors", boDC.messages());
-	                result.put("status", status);
-	                result.put("response", response);
-	                return result;
-	            }
-	            ConnectionManager.commit();
-	            boolean stop = true;
-	            // TODO
-	            // create rows here
-
-	        } catch (Exception e) {
-
-	            e.printStackTrace(Trace.excStream);
-	            status = Status.INTERNAL_SERVER_ERROR;
-	            response.put("error", "Errore generico durante la creazione ordine, controllare i log. " + e.getLocalizedMessage());
-
-	        }
-
+						rigaBODC.set("IdAzienda", ((OrdineVendita) boDC.getBo()).getIdAzienda());
+						for (String key : riga.keySet()) {
+							rigaBODC.set(key, riga.get(key));
+						}
+						rigaBODC.setAutoCommit(false);
+						rigaBODC.completaDocumento();
+						rigaBODC.set("IdAssoggettamentoIVA", ((OrdineVenditaRigaPrm)rigaBODC.getBo()).getArticolo().getIdAssoggettamentoIVA());
+						rcBODC = rigaBODC.save();
+						if (rcBODC != BODataCollector.OK) {
+							response.put("errors", boDC.messages());
+							result.put("status", status);
+							result.put("response", response);
+							return result;
+						}
+					}
+				}
+				ConnectionManager.commit();
+				response.put("message", "Ordine vendita creato correttamente");
+				response.put("IdOrdineVendita", boDC.getBo().getKey());
+			} catch (Exception e) {
+				e.printStackTrace(Trace.excStream);
+				status = Status.INTERNAL_SERVER_ERROR;
+				response.put("error", "Errore generico durante la creazione ordine, controllare i log. " + e.getLocalizedMessage());
+			}
 		}
-
 		result.put("status", status);
 		result.put("response", response);
 		return result;
-
 	}
 
 }
