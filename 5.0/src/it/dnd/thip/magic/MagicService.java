@@ -21,10 +21,8 @@ import com.thera.thermfw.common.BusinessObject;
 import com.thera.thermfw.persist.CachedStatement;
 import com.thera.thermfw.persist.ConnectionManager;
 import com.thera.thermfw.persist.Factory;
-import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.web.WebForm;
 
-import it.thera.thip.acquisti.ordineAC.OrdineAcquistoRigaPrm;
 import it.thera.thip.base.azienda.Azienda;
 import it.thera.thip.base.documenti.DocumentoBase;
 import it.thera.thip.vendite.documentoVE.DocumentoVendita;
