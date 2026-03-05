@@ -90,12 +90,15 @@ public class MagicResource extends BaseResource {
 	    return buildResponse(status, response);
 	}
 	
-	@Path("/prezzi/list")
+	@Path("/vendite/ordineVE/create")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response creaOrdineVendita(String body) {
-		
-		return null;
+	    JSONObject jsonBody = new JSONObject(body);
+	    JSONObject result = service.creaOrdineVendita(jsonBody);
+	    Status status = (Status) result.get("status");
+	    JSONObject response = result.getJSONObject("response");
+	    return buildResponse(status, response);
 	}
 }

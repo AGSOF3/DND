@@ -12,11 +12,15 @@ import javax.ws.rs.core.Response.Status;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.thera.thermfw.ad.ClassADCollection;
+import com.thera.thermfw.ad.ClassADCollectionManager;
 import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.collector.BODataCollector;
 import com.thera.thermfw.common.BusinessObject;
 import com.thera.thermfw.persist.CachedStatement;
+import com.thera.thermfw.persist.ConnectionManager;
 import com.thera.thermfw.persist.Factory;
+import com.thera.thermfw.web.WebForm;
 
 import it.thera.thip.base.azienda.Azienda;
 import it.thera.thip.vendite.documentoVE.DocumentoVendita;
@@ -26,6 +30,7 @@ import it.thera.thip.vendite.documentoVE.FatturaVenditaTM;
 import it.thera.thip.vendite.generaleVE.ws.RicercaPrezzoEcomm;
 import it.thera.thip.vendite.ordineVE.OrdineVendita;
 import it.thera.thip.vendite.ordineVE.OrdineVenditaTM;
+import it.thera.thip.vendite.ordineVE.web.OrdineVenditaDataCollector;
 
 /**
  * Classe di servizio per l’interfaccia Magic.
@@ -194,73 +199,153 @@ public class MagicService {
 	@SuppressWarnings("unchecked")
 	public JSONObject listaPrezzi(JSONArray items) {
 
-	    JSONArray resultArray = new JSONArray();
+		JSONArray resultArray = new JSONArray();
 
-	    for (int i = 0; i < items.length(); i++) {
+		for (int i = 0; i < items.length(); i++) {
 
-	        JSONObject item = items.getJSONObject(i);
+			JSONObject item = items.getJSONObject(i);
 
-	        String idArticolo = item.optString("idArticolo");
-	        String idCliente = item.optString("idCliente");
+			String idArticolo = item.optString("idArticolo");
+			String idCliente = item.optString("idCliente");
 
-	        BigDecimal prezzo = BigDecimal.ZERO;
-	        String error = null;
+			BigDecimal prezzo = BigDecimal.ZERO;
+			String error = null;
+
+			try {
+
+				RicercaPrezzoEcomm rp = new RicercaPrezzoEcomm();
+				rp.setCompany(Azienda.getAziendaCorrente());
+				rp.setUseAuthentication(false);
+
+				Map<String, Object> appParams = rp.getAppParams();
+				appParams.put("codCliente", idCliente);
+				appParams.put("codArticolo", idArticolo);
+				appParams.put("codListino", "395");
+
+				rp.setAppParams(appParams);
+
+				Map<String, Object> result = rp.send();
+
+				Object errorsObj = result.get("errors");
+
+				if (errorsObj instanceof List && !((List<?>) errorsObj).isEmpty()) {
+
+					Map<String, Object> errorMap = (Map<String, Object>) ((List<?>) errorsObj).get(0);
+					error = errorMap.values().iterator().next().toString();
+
+				} else {
+
+					BigDecimal p = (BigDecimal) result.get("prezzo");
+					if (p != null) {
+						prezzo = p;
+					}
+				}
+
+			} catch (Exception e) {
+				error = e.getMessage();
+			}
+
+			JSONObject prezzoObj = new JSONObject();
+			prezzoObj.put("idArticolo", idArticolo);
+			prezzoObj.put("idCliente", idCliente);
+			prezzoObj.put("prezzo", prezzo);
+
+			if (error != null) {
+				prezzoObj.put("error", error);
+			}
+
+			resultArray.put(prezzoObj);
+		}
+
+		JSONObject response = new JSONObject();
+		response.put("count", resultArray.length());
+		response.put("prezzi", resultArray);
+
+		JSONObject result = new JSONObject();
+		result.put("status", Status.OK);
+		result.put("response", response);
+
+		return result;
+	}
+
+	protected BODataCollector createDataCollector(String classname) {
+		try {
+			ClassADCollection hdr = ClassADCollectionManager.collectionWithName(classname);
+			return createDataCollector(hdr);
+		} catch (NoSuchFieldException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	protected BODataCollector createDataCollector(ClassADCollection classDescriptor) {
+		BODataCollector dataCollector = null;
+		String collectorName = classDescriptor.getBODataCollector();
+		if (collectorName != null) {
+			dataCollector = (BODataCollector) Factory.createObject(collectorName);
+		} else {
+			dataCollector = new BODataCollector();
+		}
+		dataCollector.initialize(classDescriptor.getClassName(), true);
+		return dataCollector;
+	}
+	
+	public JSONObject creaOrdineVendita(JSONObject body) {
+		JSONObject result = new JSONObject();
+		JSONObject response = new JSONObject();
+		Status status = Status.OK;
+		
+
+	    JSONArray righe = body.getJSONArray("righe");
+
+	    // remove rows from header body
+	    body.remove("righe");
+
+		OrdineVenditaDataCollector boDC = (OrdineVenditaDataCollector) createDataCollector("OrdineVendita");
+		int mode = WebForm.NEW;		
+		int rcBODC = boDC.initSecurityServices(mode, true, true, true);
+		if (rcBODC != BODataCollector.OK) {
+			status = Status.FORBIDDEN;
+			response.put("errors", boDC.messages());
+		} else {
 
 	        try {
 
-	            RicercaPrezzoEcomm rp = new RicercaPrezzoEcomm();
-	            rp.setCompany(Azienda.getAziendaCorrente());
-	            rp.setUseAuthentication(false);
-
-	            Map<String, Object> appParams = rp.getAppParams();
-	            appParams.put("codCliente", idCliente);
-	            appParams.put("codArticolo", idArticolo);
-	            appParams.put("codListino", "395");
-
-	            rp.setAppParams(appParams);
-
-	            Map<String, Object> result = rp.send();
-
-	            Object errorsObj = result.get("errors");
-
-	            if (errorsObj instanceof List && !((List<?>) errorsObj).isEmpty()) {
-
-	                Map<String, Object> errorMap = (Map<String, Object>) ((List<?>) errorsObj).get(0);
-	                error = errorMap.values().iterator().next().toString();
-
-	            } else {
-
-	                BigDecimal p = (BigDecimal) result.get("prezzo");
-	                if (p != null) {
-	                    prezzo = p;
-	                }
+	            // HEADER
+	            for (String key : body.keySet()) {
+	                boDC.set(key, body.get(key));
 	            }
 
+	            boDC.setAutoCommit(false);
+	            boDC.completaDocumento();
+	            rcBODC = boDC.save();
+
+	            if (rcBODC != BODataCollector.OK) {
+
+	                response.put("errors", boDC.messages());
+	                result.put("status", status);
+	                result.put("response", response);
+	                return result;
+	            }
+	            ConnectionManager.commit();
+	            boolean stop = true;
+	            // TODO
+	            // create rows here
+
 	        } catch (Exception e) {
-	            error = e.getMessage();
+
+	            e.printStackTrace(Trace.excStream);
+	            status = Status.INTERNAL_SERVER_ERROR;
+	            response.put("error", "Errore generico durante la creazione ordine, controllare i log. " + e.getLocalizedMessage());
+
 	        }
 
-	        JSONObject prezzoObj = new JSONObject();
-	        prezzoObj.put("idArticolo", idArticolo);
-	        prezzoObj.put("idCliente", idCliente);
-	        prezzoObj.put("prezzo", prezzo);
+		}
 
-	        if (error != null) {
-	            prezzoObj.put("error", error);
-	        }
+		result.put("status", status);
+		result.put("response", response);
+		return result;
 
-	        resultArray.put(prezzoObj);
-	    }
-
-	    JSONObject response = new JSONObject();
-	    response.put("count", resultArray.length());
-	    response.put("prezzi", resultArray);
-
-	    JSONObject result = new JSONObject();
-	    result.put("status", Status.OK);
-	    result.put("response", response);
-
-	    return result;
 	}
 
 }
