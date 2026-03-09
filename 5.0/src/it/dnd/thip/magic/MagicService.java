@@ -295,6 +295,10 @@ public class MagicService {
 	}
 
 	public JSONObject creaOrdineVendita(JSONObject body) {
+		
+		
+		
+		
 		JSONObject result = new JSONObject();
 		JSONObject response = new JSONObject();
 		Status status = Status.OK;
@@ -310,11 +314,11 @@ public class MagicService {
 		}
 
 		JSONArray righe = body.getJSONArray("righe");
-
-		// remove rows from header body
 		body.remove("righe");
-
 		OrdineVenditaDataCollector boDC = (OrdineVenditaDataCollector) createDataCollector("OrdineVendita");
+		
+		
+		
 		int mode = WebForm.NEW;		
 		int rcBODC = boDC.initSecurityServices(mode, true, true, true);
 		if (rcBODC != BODataCollector.OK) {
@@ -322,7 +326,6 @@ public class MagicService {
 			response.put("errors", boDC.messages());
 		} else {
 			try {
-				// HEADER
 				for (String key : body.keySet()) {
 					boDC.set(key, body.get(key));
 				}
