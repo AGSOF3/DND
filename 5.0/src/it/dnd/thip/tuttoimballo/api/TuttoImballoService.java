@@ -21,6 +21,7 @@ import com.thera.thermfw.persist.Factory;
 import com.thera.thermfw.persist.KeyHelper;
 import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.rs.errors.ErrorUtils;
+import com.thera.thermfw.security.Security;
 
 import it.dnd.thip.produzione.ordese.YGestioneUdsPickingProd;
 import it.dnd.thip.produzione.ordese.YGestioneUdsPickingProdTM;
@@ -49,23 +50,23 @@ public class TuttoImballoService {
 
 	private static final String STMT_RECUPERA_LAST_UDS = 
 			"SELECT "
-			+ "	U.* "
-			+ "FROM "
-			+ "	THIPPERS.YGESTIONE_UDS_PICKING_PROD U "
-			+ "INNER JOIN THIP.PSN_DATI_PRD_UT P ON "
-			+ "	P.ID_AZIENDA = U.ID_AZIENDA "
-			+ "AND LEFT(U.R_UTENTE_CRZ, CHARINDEX('_', U.R_UTENTE_CRZ + '_') - 1) = P.ID_UTENTE_LGN	 "//72435
-			+ "INNER JOIN THIPPERS.YDIPENDENTI Y ON "
-			+ "	P.ID_AZIENDA = Y.ID_AZIENDA "
-			+ "	AND P.OPERATORE_DEF = Y.ID_DIPENDENTE "
-			+ "INNER JOIN THIPPERS.YBILANCIA_TUTTO_IMBALLO B ON "
-			+ "	B.ID_AZIENDA = P.ID_AZIENDA "
-			+ "	AND B.ID_BILANCIA = Y.R_BILANCIA_TI "
-			+ "WHERE "
-			+ "	STATO_UDS = '"+YGestioneUdsPickingProd.PACKING_COMPLETATO+"' "
-			+ "	AND B.IP = ? AND U.ID_AZIENDA = ? "
-			//+ "ORDER BY U.TIMESTAMP_AGG ASC";
-			+ "ORDER BY U.TIMESTAMP_CRZ ASC";
+					+ "	U.* "
+					+ "FROM "
+					+ "	THIPPERS.YGESTIONE_UDS_PICKING_PROD U "
+					+ "INNER JOIN THIP.PSN_DATI_PRD_UT P ON "
+					+ "	P.ID_AZIENDA = U.ID_AZIENDA "
+					+ "AND LEFT(U.R_UTENTE_CRZ, CHARINDEX('_', U.R_UTENTE_CRZ + '_') - 1) = P.ID_UTENTE_LGN	 "//72435
+					+ "INNER JOIN THIPPERS.YDIPENDENTI Y ON "
+					+ "	P.ID_AZIENDA = Y.ID_AZIENDA "
+					+ "	AND P.OPERATORE_DEF = Y.ID_DIPENDENTE "
+					+ "INNER JOIN THIPPERS.YBILANCIA_TUTTO_IMBALLO B ON "
+					+ "	B.ID_AZIENDA = P.ID_AZIENDA "
+					+ "	AND B.ID_BILANCIA = Y.R_BILANCIA_TI "
+					+ "WHERE "
+					+ "	STATO_UDS = '"+YGestioneUdsPickingProd.PACKING_COMPLETATO+"' "
+					+ "	AND B.IP = ? AND U.ID_AZIENDA = ? "
+					//+ "ORDER BY U.TIMESTAMP_AGG ASC";
+					+ "ORDER BY U.TIMESTAMP_CRZ ASC";
 	public static CachedStatement cSelectLastUds = new CachedStatement(STMT_RECUPERA_LAST_UDS);
 
 	private static TuttoImballoService instance;
@@ -84,6 +85,7 @@ public class TuttoImballoService {
 		Status status = Status.OK;
 		Collection<ErrorMessage> errors = new Vector<ErrorMessage>();
 		try {
+			Security.openSession("ADMIN_001", "SOFTRE999");
 			YGestioneUdsPickingProd uds = recuperaUdsPickingProd(Azienda.getAziendaCorrente(), ip);
 			if(uds != null) {
 				uds.setPesoUds(peso);
@@ -105,13 +107,18 @@ public class TuttoImballoService {
 					udsTutte.add(uds);
 
 					//.Lancio stampa etichetta 2 (scrivo un record nella tabella di tutto x imballo)
-					YInterfStampanti interfStampanti = uds.recordLoftwareCartoni();
+					YInterfStampanti interfStampanti = uds.recordLoftwareCartoni(ip);
 
 					rc = interfStampanti.save();
-					if(rc > 0)
+
+					if(rc > 0) {
+						response.put("RecordStampante",interfStampanti.getKey());
 						ConnectionManager.commit();
-					else
+					}
+					else {
+						errors.add(new ErrorMessage("BAS0000078","Impossibile salvare record stampente, rc = "+rc));
 						ConnectionManager.rollback();
+					}
 				}else {
 					errors.add(new ErrorMessage("BAS0000078","Impossibile salvare UDS, rc = "+rc));
 				}
@@ -125,7 +132,10 @@ public class TuttoImballoService {
 			//response.put("errors", ErrorUtils.getInstance().toJSON(em));
 			errors.add(em);
 			e.printStackTrace(Trace.excStream);
-		}	
+		} finally {
+//			ConnectionManager.popConnection();
+			Security.closeSession();
+		}
 		response.put("errors", ErrorUtils.getInstance().toJSON(errors));
 		result.put("status", status);
 		result.put("response", response);

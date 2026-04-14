@@ -136,7 +136,7 @@ public class YGestioneUdsPickingProdGridActionAdapter extends GridActionAdapter 
 			for (int i = 0; i < keys.length; i++) {
 				YGestioneUdsPickingProd uds = YGestioneUdsPickingProd.elementWithKey(keys[i], PersistentObject.NO_LOCK);
 				if(uds != null) {
-					YInterfStampanti stp = uds.recordLoftwareCartoni();
+					YInterfStampanti stp = uds.recordLoftwareCartoni(null);
 					if(stp != null) {
 						int rc = stp.save();
 						if(rc > 0){

@@ -252,7 +252,7 @@ public class YGestioneUdsPickingProd extends YGestioneUdsPickingProdPO {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public YInterfStampanti recordLoftwareCartoni() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException, InstantiationException, SQLException, NoSuchMethodException, SecurityException {
+	public YInterfStampanti recordLoftwareCartoni(String ip) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException, InstantiationException, SQLException, NoSuchMethodException, SecurityException {
 		YMacchina macchina = null;
 		YInterfStampanti interfStampanti = (YInterfStampanti) Factory.createObject(YInterfStampanti.class);
 		interfStampanti.setIdAzienda(getIdAzienda());
@@ -261,7 +261,7 @@ public class YGestioneUdsPickingProd extends YGestioneUdsPickingProdPO {
 
 		String where = " "+RilevazioneDatiProdTesTM.ID_AZIENDA+" = '"+Azienda.getAziendaCorrente()+"'";
 		where += " AND "+RilevazioneDatiProdTesTM.NUM_RITORNO+" = '"+getNumeroRitorno()+"'";
-		//where += " AND "+RilevazioneDatiProdTesTM.STATO_RIL+" = '"+RilevazioneDatiProdTes.IN_CORSO+"'";
+//		where += " AND "+RilevazioneDatiProdTesTM.STATO_RIL+" = '"+RilevazioneDatiProdTes.IN_CORSO+"'";
 
 		Vector atvs = RilevazioneDatiProdTes.retrieveList(RilevazioneDatiProdTes.class, where, "", false);
 		if(atvs.size() > 0) {
@@ -282,24 +282,53 @@ public class YGestioneUdsPickingProd extends YGestioneUdsPickingProdPO {
 					interfStampanti.setStampante(operatore.getRStampante2Ti());
 				}else {
 					PersDatiPrdUtenteRilev utenteRilev = (PersDatiPrdUtenteRilev) Factory.createObject(PersDatiPrdUtenteRilev.class);
-				    utenteRilev.setIdAzienda(Azienda.getAziendaCorrente());
-				    UtenteAzienda ua = ((ThipUser) Security.getCurrentUser()).getUtenteAzienda();
-				    utenteRilev.setIdUtenteLgn(ua.getIdUtente());
-				    try {
-				      if(utenteRilev.retrieve() && utenteRilev.getOperatoreDefaultRel() != null) {
-				    	  YDipendente opeDefault = (YDipendente) utenteRilev.getOperatoreDefaultRel();
-				    	  if(opeDefault.getRStampante2Ti() != null)
-				    		  interfStampanti.setStampante(opeDefault.getRStampante2Ti());
-				      }
-				    }
-				    catch (SQLException ex) {
-				      ex.printStackTrace();
-				    }
+					utenteRilev.setIdAzienda(Azienda.getAziendaCorrente());
+					UtenteAzienda ua = ((ThipUser) Security.getCurrentUser()).getUtenteAzienda();
+					utenteRilev.setIdUtenteLgn(ua.getIdUtente());
+					try {
+						if(utenteRilev.retrieve() && utenteRilev.getOperatoreDefaultRel() != null) {
+							YDipendente opeDefault = (YDipendente) utenteRilev.getOperatoreDefaultRel();
+							if(opeDefault.getRStampante2Ti() != null)
+								interfStampanti.setStampante(opeDefault.getRStampante2Ti());
+						}
+					}
+					catch (SQLException ex) {
+						ex.printStackTrace();
+					}
 				}
 				//72435 >
 			}
 			if(rlpt.getOrdineEsecutivo().getIdCliente() != null)
 				idCliente = rlpt.getOrdineEsecutivo().getIdCliente();
+		}else {//se non ho la rilevazione vuol dire che sono in modalita ridotta
+			try {
+				YDipendente opeDefault = (YDipendente) Factory.createObject(YDipendente.class);
+				String select = "SELECT y.ID_AZIENDA , y.ID_DIPENDENTE \r\n"
+						+ "	FROM THIPPERS.YDIPENDENTI y \r\n"
+						+ "	INNER JOIN THIPPERS.YBILANCIA_TUTTO_IMBALLO yti \r\n"
+						+ "	ON y.ID_AZIENDA = yti.ID_AZIENDA \r\n"
+						+ "	AND y.R_BILANCIA_TI = yti.ID_BILANCIA \r\n"
+						+ "	WHERE yti.IP = '"+ip+"' ";
+				CachedStatement cs = new CachedStatement(select);
+				ResultSet rs = cs.executeQuery();
+				if(rs.next()) {
+					opeDefault.setIdAzienda(rs.getString(1));
+					opeDefault.setIdDipendente(rs.getString(2));
+				}
+				if(opeDefault.retrieve()) {
+					if(opeDefault.getRStampante2Ti() != null)
+						interfStampanti.setStampante(opeDefault.getRStampante2Ti());
+					macchina = (YMacchina) YMacchina.elementWithKey(YMacchina.class, 
+							KeyHelper.buildObjectKey(new String[] {
+									Azienda.getAziendaCorrente(),
+									"M",
+									"4",
+									opeDefault.getNote()
+							}), PersistentObject.NO_LOCK);
+				}
+			}catch (SQLException ex) {
+				ex.printStackTrace();
+			}
 		}
 		DocumentoVendita dv = (DocumentoVendita) Factory.createObject(DocumentoVendita.class);
 		if (getIdCodiceLista().length() > 5) {
@@ -331,7 +360,8 @@ public class YGestioneUdsPickingProd extends YGestioneUdsPickingProdPO {
 			if(dsc != null && dsc.length() > 50) {
 				dsc = dsc.substring(0,50);
 			}
-
+			if(idCliente == null && dv != null)
+				idCliente = dv.getIdCliente();
 			ArticoloCliente artCli = ArticoloCliente.getArticoloCliente(getIdAzienda(), idCliente, getIdArticolo(), null);
 			if(artCli != null) {
 				//72262 <
