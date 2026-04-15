@@ -1,0 +1,17 @@
+<tfml>
+
+  <form name="RilevDatiPrdTSForm"
+        classHdr="RilevDatiPrdTS"
+        errorList="no"
+        menubar="no"
+        toolbar="no"
+        submitReset="none"
+        servlet="it.thera.thip.produzione.raccoltaDati.web.RilevDatiPrdTSFormActionAdapter"
+				webFormModifierClass="it.thera.thip.produzione.raccoltaDati.web.RilevDatiPrdTSWebFormModifier"
+        onLoadPresent="yes"
+        jsLibraryName="it/dnd/thip/produzione/raccoltaDati/YChiusuraListaTesta.js">
+
+				<textinput name="CodiceTestataLista" classAD="CodiceTestataLista"/>
+  </form>
+
+</tfml>
