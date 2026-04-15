@@ -12,6 +12,7 @@
         jsLibraryName="it/dnd/thip/produzione/raccoltaDati/YChiusuraListaTesta.js">
 
 				<textinput name="CodiceTestataLista" classAD="CodiceTestataLista"/>
+				<button name="CheckButton" resourceFile="it.dnd.thip.produzione.raccoltaDati.resources.YChiusuraListaTesta" resourceID="CheckButton" script="checkButtonAction()"/>
   </form>
 
 </tfml>

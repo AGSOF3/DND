@@ -106,9 +106,11 @@
    RilevDatiPrdTSForm.writeBodyStartElements(out); 
 %> 
 
+<!-- 72435 INIZIO -->
 <div class="spinner-overlay" id="spinner" style="display:none;">
-    <div class="spinner"></div>
+    <div class="spinner"></div> 
 </div>
+<!-- 72435 FINE -->
 	<table width="100%" height="100%" cellspacing="0" cellpadding="0">
 <tr>
 <td style="height:0" valign="top">
@@ -157,6 +159,20 @@
   RilevDatiPrdTSCodiceTestataLista.write(out); 
 %>
 </td>
+							<td>
+<% 
+  WebButton CheckButtonWebButton = new WebButton(); 
+  CheckButtonWebButton.setImage(null); 
+  CheckButtonWebButton.setResourceFile("it.dnd.thip.produzione.raccoltaDati.resources.YChiusuraListaTesta"); 
+  CheckButtonWebButton.setResourceId("CheckButton"); 
+  CheckButtonWebButton.setResourceTooltipId(null); 
+%>
+<button class=" <%=CheckButtonWebButton.getButtonCSSClass()%>" id="CheckButton" name="CheckButton" onclick="checkButtonAction()" title="<%=CheckButtonWebButton.getTitle()%>" type="button"><%CheckButtonWebButton.getBtnContent(out);%></button></td>
+						</tr>
+						<tr>
+						<td colspan="3">
+						<div id="result"></div>
+						</td>
 						</tr>
 					</table>
 				</td>
