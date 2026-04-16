@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE TDDML SYSTEM "../../../TDDML.dtd">
+<TDDML>
+  <!-- YLOG_CHECK_CHIUSURA_LISTA (YLOG_CH): Log check chiusura lista; -->
+  <CreateTable schema="THIPPERS" name="YLOG_CHECK_CHIUSURA_LISTA" shortname="YLOG_CH">
+    <Column name="ID_AZIENDA" shortname="ID_AZIENDA" type="char" length="3" nullable="no"/>
+    <Column name="STATO" shortname="STATO" type="char" length="1" nullable="no"/>
+    <Column name="R_UTENTE_CRZ" shortname="R_UTENTE_C" type="char" length="20" nullable="yes"/>
+    <Column name="TIMESTAMP_CRZ" shortname="TIMESTAMP_" type="timestamp" nullable="no" default="CURRENT TIMESTAMP"/>
+    <Column name="R_UTENTE_AGG" shortname="R_UTENTE_A" type="char" length="20" nullable="yes"/>
+    <Column name="TIMESTAMP_AGG" shortname="TIMESTAMP0" type="timestamp" nullable="no" default="CURRENT TIMESTAMP"/>
+    <Column name="RIF_RIGA_LISTA" shortname="RIF_RIGA_L" type="char" length="25" nullable="yes"/>
+    <Column name="R_ARTICOLO" shortname="R_ARTICOLO" type="char" length="25" nullable="yes"/>
+    <Column name="QTA_RICHIESTA" shortname="QTA_RICHIE" type="decimal" length="19" scale="6" nullable="yes"/>
+    <Column name="QTA_CONFEZIONATA" shortname="QTA_CONFEZ" type="decimal" length="19" scale="6" nullable="yes"/>
+    <Column name="QTA_RESIDUA" shortname="QTA_RESIDU" type="decimal" length="19" scale="6" nullable="yes"/>
+    <Column name="ANOMALIA" shortname="ANOMALIA" type="char" length="1" nullable="no" default="N"/>
+    <Column name="ID_PROGRESSIVO" shortname="ID_PROGRES" type="integer" nullable="no"/>
+  </CreateTable>
+  <CreateIndex schema="THIPPERS" name="YLOG_CHECK_CHI_I01" tabschema="THIPPERS" tabname="YLOG_CHECK_CHIUSURA_LISTA" shortname="YLOG_C_I01" unique="yes">
+    <IndexCol name="ID_AZIENDA" order="Asc"/>
+    <IndexCol name="ID_PROGRESSIVO" order="Asc"/>
+  </CreateIndex>
+  <AlterTable schema="THIPPERS" name="YLOG_CHECK_CHIUSURA_LISTA">
+    <AddPrimaryKey>
+      <PrimaryKey>
+        <ColumnRef name="ID_AZIENDA"/>
+        <ColumnRef name="ID_PROGRESSIVO"/>
+      </PrimaryKey>
+    </AddPrimaryKey>
+  </AlterTable>
+  <Comment>
+    <CommentTable schema="THIPPERS" name="YLOG_CHECK_CHIUSURA_LISTA" text="Log check chiusura lista">
+      <CommentColumn name="ID_AZIENDA" text="Azienda"/>
+      <CommentColumn name="STATO" text="Stato"/>
+      <CommentColumn name="R_UTENTE_CRZ" text="Utente creazione"/>
+      <CommentColumn name="TIMESTAMP_CRZ" text="Timestamp creazione"/>
+      <CommentColumn name="R_UTENTE_AGG" text="Utente ultima modifica"/>
+      <CommentColumn name="TIMESTAMP_AGG" text="Timestamp ultima modifica"/>
+      <CommentColumn name="RIF_RIGA_LISTA" text="Rif. Riga. Lista"/>
+      <CommentColumn name="R_ARTICOLO" text="Articolo"/>
+      <CommentColumn name="QTA_RICHIESTA" text="Qta richiesta"/>
+      <CommentColumn name="QTA_CONFEZIONATA" text="Qta confezionata"/>
+      <CommentColumn name="QTA_RESIDUA" text="Qta residua"/>
+      <CommentColumn name="ANOMALIA" text="Anomalia"/>
+      <CommentColumn name="ID_PROGRESSIVO" text="Progressivo"/>
+    </CommentTable>
+    <CommentIndex schema="THIPPERS" name="YLOG_CHECK_CHI_I01" text="Primary Key"/>
+  </Comment>
+  <Grant schema="THIPPERS" name="YLOG_CHECK_CHIUSURA_LISTA"/>
+</TDDML>

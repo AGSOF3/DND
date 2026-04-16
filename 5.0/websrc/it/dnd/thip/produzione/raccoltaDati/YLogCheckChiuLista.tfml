@@ -1,0 +1,31 @@
+<tfml>
+  <generator type="form"/>
+  <form classHdr="YLogCheckChiuLista"
+    name="YLogCheckChiuListaForm"
+    locktype="nolock"
+    errorList="yes" menubar="yes" toolbar="yes" submitReset="none"
+    servlet="com.thera.thermfw.web.servlet.FormActionAdapter"
+    jsLibraryName="it/dnd/thip/produzione/raccoltaDati/YLogCheckChiuLista.js"
+    onLoadPresent="yes"
+    header="com.thera.thermfw.common.Header.jsp"
+    footer="com.thera.thermfw.common.Footer.jsp">
+    <menubar  name="myMenuBar">
+      <import file="it/thera/thip/cs/defObjMenu.tfml"/>
+    </menubar>
+    <toolbar name="myToolBar" imgwidth="16" imgheight="16">
+      <import file="it/thera/thip/cs/defObjMenu.tfml"/>
+    </toolbar>
+    <textinput name="IdProgressivo" classAD="IdProgressivo"/>
+    <tabbed name="mytabbed" height="100%" width="100%">
+      <tab name="tab2" resourceFile="it.dnd.thip.produzione.raccoltaDati.resources.YLogCheckChiuLista" resourceID="tab2">
+        <textinput name="RifRigaLista" classAD="RifRigaLista"/>
+        <multisearchform name="Articolo" classRD="Articolo"/>
+        <textinput name="QtaRichiesta" classAD="QtaRichiesta"/>
+        <textinput name="QtaConfezionata" classAD="QtaConfezionata"/>
+        <textinput name="QtaResidua" classAD="QtaResidua"/>
+        <checkbox classAD="Anomalia" name="Anomalia"/>
+      </tab>
+    </tabbed>
+  </form>
+</tfml>
+
