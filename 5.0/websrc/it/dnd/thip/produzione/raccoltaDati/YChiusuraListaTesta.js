@@ -73,36 +73,36 @@ function createSection(title, rows, collapsed, color) {
 
     if (rows.length === 0) {
         html += "<p>Nessun record</p>";
-    } else {
+    }else {
+    html += `
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <th>Codice Riga</th>
+                <th>Articolo</th>
+                <th>Descrizione</th>
+                <th>Richiesta</th>
+                <th>Confezionata</th>
+                <th>Residua</th>
+            </tr>
+    `;
+
+    const bgColor = (color === "green") ? "#d4edda" : "#f8d7da";
+
+    rows.forEach(row => {
         html += `
-            <table style="width:100%; border-collapse:collapse;">
-                <tr>
-                    <th>Codice Riga</th>
-                    <th>Articolo</th>
-                    <th>Descrizione</th>
-                    <th>Richiesta</th>
-                    <th>Confezionata</th>
-                    <th>Residua</th>
-                </tr>
+            <tr class="result-row" style="background:${bgColor};">
+                <td>${row.codiceRiga}</td>
+                <td>${row.codArticolo}</td>
+                <td>${row.descManuale}</td>
+                <td>${row.qtaRichiesta}</td>
+                <td>${row.qtaConfezionata}</td>
+                <td><b>${row.qtaResidua}</b></td>
+            </tr>
         `;
+    });
 
-        rows.forEach(row => {
-            const bgColor = (color === "green") ? "#d4edda" : "#f8d7da";
-
-            html += `
-                <tr style="background:${bgColor};">
-                    <td>${row.codiceRiga}</td>
-                    <td>${row.codArticolo}</td>
-                    <td>${row.descManuale}</td>
-                    <td>${row.qtaRichiesta}</td>
-                    <td>${row.qtaConfezionata}</td>
-                    <td><b>${row.qtaResidua}</b></td>
-                </tr>
-            `;
-        });
-
-        html += "</table>";
-    }
+    html += "</table>";
+}
 
     html += `</div></div>`;
 

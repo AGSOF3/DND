@@ -100,6 +100,14 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+.result-row:hover {
+    filter: brightness(0.95);
+}
+th {
+    position: sticky;
+    top: 0;
+    background: #ddd;
+}
 </style>
 </head>
 <body bottommargin="0" leftmargin="0" onbeforeunload="<%=RilevDatiPrdTSForm.getBodyOnBeforeUnload()%>" onload="<%=RilevDatiPrdTSForm.getBodyOnLoad()%>" onunload="<%=RilevDatiPrdTSForm.getBodyOnUnload()%>" rightmargin="0" topmargin="0"><%
@@ -170,7 +178,7 @@
 <button class=" <%=CheckButtonWebButton.getButtonCSSClass()%>" id="CheckButton" name="CheckButton" onclick="checkButtonAction()" title="<%=CheckButtonWebButton.getTitle()%>" type="button"><%CheckButtonWebButton.getBtnContent(out);%></button></td>
 						</tr>
 						<tr>
-						<td colspan="3">
+						<td colspan="4">
 						<div id="result"></div>
 						</td>
 						</tr>
