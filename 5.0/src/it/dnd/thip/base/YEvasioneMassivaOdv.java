@@ -115,7 +115,7 @@ public class YEvasioneMassivaOdv extends BatchRunnable implements Authorizable {
 			+ "                         (2 * ((? + DATEPART(WEEKDAY, GETDATE()) - 1) / 5)), GETDATE()) "
 			+ ") "
 			+ "AND ovr.FLAG_RIS_UTE_1 = '-' ";//72177 stato conferma evasione massiva su riga ordine = confermato
-//				+ " AND ovr.ID_NUMERO_ORD = 'OV  000945' AND ovr.ID_ANNO_ORD = '2026' ";
+//				+ " AND ovr.ID_NUMERO_ORD IN ('OV  002106','OV  002107') AND ovr.ID_ANNO_ORD = '2026' ";
 	public static CachedStatement cEstrazioneOrdVenRig = new CachedStatement(STMT_ORD_VEN_RIG);
 
 	public int getGiorniOrizzonte() {
@@ -905,7 +905,7 @@ public class YEvasioneMassivaOdv extends BatchRunnable implements Authorizable {
 
 		if(PersDatiVen.getCurrentPersDatiVen() != null) {
 			if(PersDatiVen.getCurrentPersDatiVen().isAblCauVenDDT()) {
-				trovaDocVenAccodabile += " AND ovt.R_CAU_ORD_VEN = '"+ordVen.getIdCau()+"'  ";
+				trovaDocVenAccodabile += " AND (ovt.R_CAU_ORD_VEN = '"+ordVen.getIdCau()+"' or ovt.R_CAU_ORD_VEN IS NULL)";
 			}
 		}
 
@@ -919,7 +919,8 @@ public class YEvasioneMassivaOdv extends BatchRunnable implements Authorizable {
 				+ "		ovt.ID_ANNO_ORDINE = '"+ordVen.getAnnoDocumento()+"'\r\n"
 				+ "			AND \r\n"
 				+ "		ovt.ID_NUMERO_ORD = '"+ordVen.getNumeroDocumento()+"' )\r\n"
-				+ "		)";
+				+ " OR (ovt.RAG_ORD_BOLLA IS NULL) "
+				+ "		) ";
 
 		Trace.printlnUserArea(Trace.US1, "Ricerca documento accorpabile query: "+trovaDocVenAccodabile, EVAS_MASSIVA_TRACE_SELECTOR);
 		try {
