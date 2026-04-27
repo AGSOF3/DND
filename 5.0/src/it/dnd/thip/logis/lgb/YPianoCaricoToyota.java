@@ -56,6 +56,7 @@ import it.thera.thip.logis.fis.UbicazioneTM;
  * 72197	07/11/2025	AGSOF3	 Find baia in synchro e settata subito in blocco da agv
  * 72224	25/11/2025	DSSOF3   Aggiungere metodo isPianoChiuso
  * 72326	09/02/2026	DSSOF3	 Metodo movimentaUdcManuale correzione nullPointer.
+ * 72459	27/04/2026	AGSOF3	 Print errori
  */
 
 public class YPianoCaricoToyota extends YPianoCaricoToyotaPO {
@@ -169,6 +170,9 @@ public class YPianoCaricoToyota extends YPianoCaricoToyotaPO {
 				&& cambioUbicazioneUdc.getUbicazioneOld() != null) {
 			err = cambioUbicazioneUdc.fine();
 			if(!err.isEmpty()) {
+				for(ErrorMessage em : ((Vector<ErrorMessage>)err)) {
+					Trace.println("Errore in it.dnd.thip.logis.lgb.YPianoCaricoToyota.movimentaUdcManuale(): " + em.getText());//72459 AGSOF3
+				}
 				return ErrorCodes.GENERIC_ERROR;
 			}else {
 				setMovimentaUdcManuale(false);

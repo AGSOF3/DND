@@ -72,6 +72,7 @@ import it.thera.thip.logis.rf.gui.LogisRF;
  * 72036	14/07/2025	DSSOF3   Sistemazione pagina stampa etichetta
  * 72046	14/07/2025	DSSOF3	 Introduzione stampa etichette
  * 72452	20/04/2026	AGSOF3	 Rimosso controllo riga prelevabile 
+ * 72459	27/04/2026	AGSOF3	 Faccio cancellazione missioni quando il PC viene messo in pronta per il reintegro
  */
 
 public class YProcessaListeCaricoRf extends LogisRF {
@@ -1358,7 +1359,7 @@ public class YProcessaListeCaricoRf extends LogisRF {
 					YPianoCaricoToyotaRiga riga = (YPianoCaricoToyotaRiga) iterRighe.next();
 					riga.setStatoRiga(StatoRigaToyota.CHIUSA);
 				}
-
+				cancellazione();//72459 AGSOF3 quando mettiamo il piano in pronta per il reintegro pulisco le missioni
 				int rc = pianoInRiposizionamento.save();
 				if(rc > 0) {
 					ConnectionManager.commit();
