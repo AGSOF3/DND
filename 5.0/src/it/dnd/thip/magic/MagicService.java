@@ -23,6 +23,8 @@ import com.thera.thermfw.persist.ConnectionManager;
 import com.thera.thermfw.persist.Factory;
 import com.thera.thermfw.web.WebForm;
 
+import it.thera.thip.base.articolo.ArticoloBarcode;
+import it.thera.thip.base.articolo.ArticoloBase;
 import it.thera.thip.base.azienda.Azienda;
 import it.thera.thip.base.documenti.DocumentoBase;
 import it.thera.thip.vendite.documentoVE.DocumentoVendita;
@@ -54,6 +56,7 @@ import it.thera.thip.vendite.ordineVE.web.OrdineVenditaRigaPrmDataCollector;
  * Number	Date		Owner	Description
  * 72066    24/07/2025  AGSOF3  Prima stesura
  * 72387	04/03/2026	AGSOF3	lista prezzi
+ * 72480	12/05/2026	AGSOF3	Aggiunto primo barcode in prezzi/list
  */
 
 public class MagicService {
@@ -213,6 +216,7 @@ public class MagicService {
 			String idCliente = item.optString("idCliente");
 
 			BigDecimal prezzo = BigDecimal.ZERO;
+			String barcode = null;
 			String error = null;
 
 			try {
@@ -244,6 +248,18 @@ public class MagicService {
 						prezzo = p;
 					}
 				}
+				
+				//72480 <
+				ArticoloBase articolo = (ArticoloBase) Factory.createObject(ArticoloBase.class);
+				articolo.setIdAzienda(Azienda.getAziendaCorrente());
+				articolo.setIdArticolo(idArticolo);
+				if(articolo.retrieve()) {
+					if(articolo.getBarcodeArticoloColl().size() > 0) {
+						ArticoloBarcode artBarcode = (ArticoloBarcode)articolo.getBarcodeArticoloColl().get(0);
+						barcode = artBarcode.getIdCodiceBarre();
+					}
+				}
+				//72480 >
 
 			} catch (Exception e) {
 				error = e.getMessage();
@@ -253,7 +269,10 @@ public class MagicService {
 			prezzoObj.put("idArticolo", idArticolo);
 			prezzoObj.put("idCliente", idCliente);
 			prezzoObj.put("prezzo", prezzo);
-			
+			//72480 <
+			if(barcode != null)
+				prezzoObj.put("barcode", barcode);
+			//72480 >
 			
 			if (error != null) {
 				prezzoObj.put("error", error);
