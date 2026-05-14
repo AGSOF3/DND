@@ -18,6 +18,20 @@ import com.thera.thermfw.security.Conflictable;
 import it.thera.thip.base.azienda.Azienda;
 import it.thera.thip.cs.EntitaAzienda;
 
+/**
+* <p>
+* Company: Softre Solutions<br>
+* Author: Andrea Gatta<br>
+* Date: 15/05/2026
+* </p>
+*/
+
+/*
+* Revisions:
+* Number   Date        Owner    Description
+* 72485	   06/08/2025  AGSOF3   Prima stesura
+*/
+
 public abstract class YContinentePO extends EntitaAzienda
 		implements BusinessObject, Authorizable, Deletable, Conflictable {
 
