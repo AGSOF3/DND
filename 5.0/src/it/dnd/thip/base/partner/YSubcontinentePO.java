@@ -32,12 +32,12 @@ import it.thera.thip.cs.EntitaAzienda;
 * 72485	   15/05/2026  AGSOF3   Prima stesura
 */
 
-public abstract class YContinentePO extends EntitaAzienda
+public abstract class YSubcontinentePO extends EntitaAzienda
 		implements BusinessObject, Authorizable, Deletable, Conflictable {
 
-	private static YContinente cInstance;
+	private static YSubcontinente cInstance;
 
-	protected String iIdContinente;
+	protected String iIdSubcontinente;
 
 	protected String iDescrizione;
 
@@ -45,26 +45,26 @@ public abstract class YContinentePO extends EntitaAzienda
 	public static Vector retrieveList(String where, String orderBy, boolean optimistic)
 			throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
 		if (cInstance == null)
-			cInstance = (YContinente) Factory.createObject(YContinente.class);
+			cInstance = (YSubcontinente) Factory.createObject(YSubcontinente.class);
 		return PersistentObject.retrieveList(cInstance, where, orderBy, optimistic);
 	}
 
-	public static YContinente elementWithKey(String key, int lockType) throws SQLException {
-		return (YContinente) PersistentObject.elementWithKey(YContinente.class, key, lockType);
+	public static YSubcontinente elementWithKey(String key, int lockType) throws SQLException {
+		return (YSubcontinente) PersistentObject.elementWithKey(YSubcontinente.class, key, lockType);
 	}
 
-	public YContinentePO() {
+	public YSubcontinentePO() {
 		setIdAzienda(Azienda.getAziendaCorrente());
 	}
 
-	public void setIdContinente(String idContinente) {
-		this.iIdContinente = idContinente;
+	public void setIdSubcontinente(String idSubcontinente) {
+		this.iIdSubcontinente = idSubcontinente;
 		setDirty();
 		setOnDB(false);
 	}
 
-	public String getIdContinente() {
-		return iIdContinente;
+	public String getIdSubcontinente() {
+		return iIdSubcontinente;
 	}
 
 	public void setDescrizione(String descrizione) {
@@ -100,13 +100,13 @@ public abstract class YContinentePO extends EntitaAzienda
 
 	public void setKey(String key) {
 		setIdAzienda(KeyHelper.getTokenObjectKey(key, 1));
-		setIdContinente(KeyHelper.getTokenObjectKey(key, 2));
+		setIdSubcontinente(KeyHelper.getTokenObjectKey(key, 2));
 	}
 
 	public String getKey() {
 		String idAzienda = getIdAzienda();
-		String idContinente = getIdContinente();
-		Object[] keyParts = { idAzienda, idContinente };
+		String idSubcontinente = getIdSubcontinente();
+		Object[] keyParts = { idAzienda, idSubcontinente };
 		return KeyHelper.buildObjectKey(keyParts);
 	}
 
@@ -119,7 +119,7 @@ public abstract class YContinentePO extends EntitaAzienda
 	}
 
 	protected TableManager getTableManager() throws SQLException {
-		return YContinenteTM.getInstance();
+		return YSubcontinenteTM.getInstance();
 	}
 
 }

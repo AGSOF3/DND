@@ -1,0 +1,28 @@
+<tfml>
+  <generator type="form"/>
+  <form classHdr="YSubcontinente"
+    name="YSubcontinenteForm"
+    locktype="nolock"
+    errorList="yes" menubar="yes" toolbar="yes" submitReset="none"
+    servlet="com.thera.thermfw.web.servlet.FormActionAdapter"
+    jsLibraryName="it/dnd/thip/base/partner/YSubcontinente.js"
+    onLoadPresent="yes"
+    header="com.thera.thermfw.common.Header.jsp"
+    footer="com.thera.thermfw.common.Footer.jsp">
+    <menubar  name="myMenuBar">
+      <import file="it/thera/thip/cs/defObjMenu.tfml"/>
+    </menubar>
+    <toolbar name="myToolBar" imgwidth="16" imgheight="16">
+      <import file="it/thera/thip/cs/defObjMenu.tfml"/>
+    </toolbar>
+    <textinput name="IdAzienda" classAD="IdAzienda"/>
+    <tabbed name="mytabbed" height="100%" width="100%">
+      <tab name="tab1" resourceFile="it.dnd.thip.base.partner.resources.YSubcontinente" resourceID="tab1">
+        <textinput name="IdSubcontinente" classAD="IdSubcontinente"/>
+        <textinput name="Descrizione" classAD="Descrizione"/>
+        <subform classCD="DatiComuniEstesi" name="DatiComuniEstesi"/>
+      </tab>
+    </tabbed>
+  </form>
+</tfml>
+

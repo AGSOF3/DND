@@ -22,7 +22,7 @@ import it.thera.thip.cs.DatiComuniEstesiTTM;
 * 72485	   15/05/2026  AGSOF3   Prima stesura
 */
 
-public class YContinenteTM extends TableManager {
+public class YSubcontinenteTM extends TableManager {
 
 	public static final String ID_AZIENDA = "ID_AZIENDA";
 
@@ -36,24 +36,24 @@ public class YContinenteTM extends TableManager {
 
 	public static final String TIMESTAMP_AGG = "TIMESTAMP_AGG";
 
-	public static final String ID_CONTINENTE = "ID_CONTINENTE";
+	public static final String ID_SUBCONTINENTE = "ID_SUBCONTINENTE";
 
 	public static final String DESCRIZIONE = "DESCRIZIONE";
 
-	public static final String TABLE_NAME = SystemParam.getSchema("THIPPERS") + "YCONTINENTE";
+	public static final String TABLE_NAME = SystemParam.getSchema("THIPPERS") + "YSUBCONTINENTE";
 
 	private static TableManager cInstance;
 
-	private static final String CLASS_NAME = it.dnd.thip.base.partner.YContinente.class.getName();
+	private static final String CLASS_NAME = it.dnd.thip.base.partner.YSubcontinente.class.getName();
 
 	public synchronized static TableManager getInstance() throws SQLException {
 		if (cInstance == null) {
-			cInstance = (TableManager) Factory.createObject(YContinenteTM.class);
+			cInstance = (TableManager) Factory.createObject(YSubcontinenteTM.class);
 		}
 		return cInstance;
 	}
 
-	public YContinenteTM() throws SQLException {
+	public YSubcontinenteTM() throws SQLException {
 		super();
 	}
 
@@ -65,19 +65,19 @@ public class YContinenteTM extends TableManager {
 
 	protected void initializeRelation() throws SQLException {
 		super.initializeRelation();
-		addAttribute("IdContinente", ID_CONTINENTE);
+		addAttribute("IdSubcontinente", ID_SUBCONTINENTE);
 		addAttribute("Descrizione", DESCRIZIONE);
 		addAttribute("IdAzienda", ID_AZIENDA);
 
 		addComponent("DatiComuniEstesi", DatiComuniEstesiTTM.class);
-		setKeys(ID_AZIENDA + "," + ID_CONTINENTE);
+		setKeys(ID_AZIENDA + "," + ID_SUBCONTINENTE);
 
 		setTimestampColumn("TIMESTAMP_AGG");
 		((it.thera.thip.cs.DatiComuniEstesiTTM) getTransientTableManager("DatiComuniEstesi")).setExcludedColums();
 	}
 
 	private void init() throws SQLException {
-		configure(ID_CONTINENTE + ", " + DESCRIZIONE + ", " + ID_AZIENDA + ", " + STATO + ", " + R_UTENTE_CRZ + ", "
+		configure(ID_SUBCONTINENTE + ", " + DESCRIZIONE + ", " + ID_AZIENDA + ", " + STATO + ", " + R_UTENTE_CRZ + ", "
 				+ TIMESTAMP_CRZ + ", " + R_UTENTE_AGG + ", " + TIMESTAMP_AGG);
 	}
 

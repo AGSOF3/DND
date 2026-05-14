@@ -2,7 +2,6 @@ package it.dnd.thip.base.partner;
 
 import com.thera.thermfw.common.ErrorMessage;
 
-
 /**
 * <p>
 * Company: Softre Solutions<br>
@@ -17,7 +16,7 @@ import com.thera.thermfw.common.ErrorMessage;
 * 72485	   15/05/2026  AGSOF3   Prima stesura
 */
 
-public class YContinente extends YContinentePO {
+public class YSubcontinente extends YSubcontinentePO {
 
 	public ErrorMessage checkDelete() {
 		return null;
