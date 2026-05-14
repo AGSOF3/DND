@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE TDDML SYSTEM "../../../TDDML.dtd">
+<TDDML>
+  <!-- YBBT34PT (YBBT34P): Nazione Primrose; -->
+  <CreateTable schema="THIPPERS" name="YBBT34PT" shortname="YBBT34P">
+    <Column name="T34CD" shortname="T34CD" type="char" length="3" nullable="no"/>
+    <Column name="R_CONTINENTE" shortname="R_CONTINEN" type="char" length="5" nullable="yes"/>
+    <Column name="R_SUBCONTINENTE" shortname="R_SUBCONTI" type="char" length="5" nullable="yes"/>
+    <Column name="ID_AZIENDA" shortname="ID_AZIENDA" type="char" length="3" nullable="yes"/>
+  </CreateTable>
+  <CreateIndex schema="THIPPERS" name="YBBT34PT_I01" tabschema="THIPPERS" tabname="YBBT34PT" shortname="YBBT34_I01" unique="yes">
+    <IndexCol name="T34CD" order="Asc"/>
+  </CreateIndex>
+  <AlterTable schema="THIPPERS" name="YBBT34PT">
+    <AddPrimaryKey>
+      <PrimaryKey>
+        <ColumnRef name="T34CD"/>
+      </PrimaryKey>
+    </AddPrimaryKey>
+  </AlterTable>
+  <Comment>
+    <CommentTable schema="THIPPERS" name="YBBT34PT" text="Nazione Primrose">
+      <CommentColumn name="T34CD" text="Codice"/>
+      <CommentColumn name="R_CONTINENTE" text="Continente"/>
+      <CommentColumn name="R_SUBCONTINENTE" text="Subcontinente"/>
+      <CommentColumn name="ID_AZIENDA" text="azienda"/>
+    </CommentTable>
+    <CommentIndex schema="THIPPERS" name="YBBT34PT_I01" text="Primary Key"/>
+  </Comment>
+  <Grant schema="THIPPERS" name="YBBT34PT"/>
+</TDDML>
