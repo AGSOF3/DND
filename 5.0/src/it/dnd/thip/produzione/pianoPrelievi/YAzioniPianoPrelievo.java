@@ -29,7 +29,6 @@ import it.thera.thip.base.generale.NumeratoreException;
 import it.thera.thip.base.generale.NumeratoreHandler;
 import it.thera.thip.base.generale.Serie;
 import it.thera.thip.produzione.ordese.OrdineEsecutivo;
-import it.thera.thip.produzione.ordese.OrdineEsecutivoPO;
 import it.thera.thip.produzione.pianoPrelievi.AzioniPianoPrelievo;
 import it.thera.thip.produzione.pianoPrelievi.GenerazionePianiPrlBatch;
 import it.thera.thip.produzione.pianoPrelievi.PianoPrelieviRiga;
@@ -69,6 +68,7 @@ import it.thera.thip.vendite.ordineVE.OrdineVenditaRiga;
  * 72020	30/06/2025	DSSOF3	Sistemare where accorpabilita
  * 72080	06/08/2025	DSSOF3  Remmare generazione documento vendita, rendere statici alcuni metodi che usero' in altre classi
  * 72210	16/11/2025	AGSOF3	Evado commenti ord ven in generazione doc ven	
+ * 72468	15/05/2026	AGSOF3	Dalla where di estrazione dei materiali ho rimosso la data di fine orizzonte
  */
 
 public class YAzioniPianoPrelievo extends AzioniPianoPrelievo{
@@ -166,7 +166,7 @@ public class YAzioniPianoPrelievo extends AzioniPianoPrelievo{
 	public String costruisciWhere() {
 		String where = super.costruisciWhere();
 		String regexData = "\\s+AND DATA_PRV_IMPIEGO <= CONVERT\\(DATETIME, '\\d{4}-\\d{2}-\\d{2}', 120\\)";
-		where = where.replaceAll(regexData, "");
+		where = where.replaceAll(regexData, "");//72468
 		return where;
 	}	
 
