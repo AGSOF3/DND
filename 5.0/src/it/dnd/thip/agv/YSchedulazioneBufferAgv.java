@@ -68,6 +68,7 @@ import it.thera.thip.cs.ThipException;
  * 								 possano passare le missioni, quando sono di prelievo potrebbero esserci le baie piene 
  * 72274	09/01/2026	AGSOF3	 All'inizio di un ciclo di buffer sblocco le eventuali baie rimaste bloccate erroneamente
  * 								 Modificato l'ordinamento della query di retrievi piani non schedulati
+ * 72468	15/05/2026	AGSOF3	 Modificato ordinamento query estrazione piani di carico, ordiniamo per data fine ord produzione
  */
 
 public class YSchedulazioneBufferAgv extends BatchRunnable implements Authorizable, Conflictable {
