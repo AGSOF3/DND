@@ -28,7 +28,7 @@ public class YNazionePrimroseTM extends NazionePrimroseTM {
 
 	public static final String ID_AZIENDA = "ID_AZIENDA";
 
-	public static final String TABLE_NAME_EXT = SystemParam.getSchema("THIPPERS") + "";
+	public static final String TABLE_NAME_EXT = SystemParam.getSchema("THIPPERS") + "YBBT34PT";
 
 	private static final String CLASS_NAME = it.dnd.thip.base.partner.YNazionePrimrose.class.getName();
 
