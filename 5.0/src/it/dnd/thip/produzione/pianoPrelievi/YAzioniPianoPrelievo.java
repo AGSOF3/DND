@@ -19,6 +19,7 @@ import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.security.Entity;
 
 import it.dnd.thip.logis.lgb.StatoPrelievoUdcToyota;
+import it.dnd.thip.produzione.ordese.YAttivitaEsecutiva;
 import it.thera.thip.base.azienda.Azienda;
 import it.thera.thip.base.cliente.ClienteVendita;
 import it.thera.thip.base.cliente.IdentificativoBanca;
@@ -170,6 +171,26 @@ public class YAzioniPianoPrelievo extends AzioniPianoPrelievo{
 		return where;
 	}	
 
+	/**
+	 * Definisco che un record sia processabile o meno in funzione del flag
+	 * collegato a logistica su atv esecutiva
+	 */
+	//72468 <
+	@Override
+	protected boolean isRecordProcessabile(WrapperPianoPrlDati wrPianoPrlDati) {
+		try {
+			YAttivitaEsecutiva atv = (YAttivitaEsecutiva) YAttivitaEsecutiva.elementWithKey(wrPianoPrlDati.getKey(),0);
+			if(atv != null) {
+				output.println(wrPianoPrlDati.getKey() + " Collegato a logistica: " +  atv.getCollegatoLogistica());
+				return atv.getCollegatoLogistica();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return super.isRecordProcessabile(wrPianoPrlDati);
+	}
+	//72468 >
+	
 	/**
 	 * Salva la testata del piano di prelievo e, se l'operazione ha avuto successo e si tratta
 	 * di un piano associato a soli ordini programmati, gestisce la creazione (o accorpamento) 
