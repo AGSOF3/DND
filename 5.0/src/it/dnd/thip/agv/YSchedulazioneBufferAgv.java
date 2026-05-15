@@ -34,7 +34,9 @@ import com.thera.thermfw.security.Security;
 import com.thera.thermfw.web.WebElement;
 
 import it.dnd.thip.base.azienda.YReparto;
+import it.dnd.thip.logis.fis.TipoGestioneUbicazione;
 import it.dnd.thip.logis.fis.YUbicazione;
+import it.dnd.thip.logis.lgb.StatoPrelievoRigaToyota;
 import it.dnd.thip.logis.lgb.StatoPrelievoUdcToyota;
 import it.dnd.thip.logis.lgb.YGenerazionePianiCaricoToyota;
 import it.dnd.thip.logis.lgb.YPianoCaricoToyota;
@@ -72,89 +74,59 @@ public class YSchedulazioneBufferAgv extends BatchRunnable implements Authorizab
 
 	public static final String RES = "it.dnd.thip.agv.resources.YSchedulazioneBufferAgv";
 
-	protected static final String SELECT_PIANI_CARICO_NON_SCHEDUL = "WITH BASE AS (\r\n"
-			+ "    SELECT\r\n"
-			+ "        PCT.ID_AZIENDA,\r\n"
-			+ "        PCT.ID_ANNO_DOC,\r\n"
-			+ "        PCT.ID_NUMERO_DOC,\r\n"
-			+ "        PCT.R_REPARTO,\r\n"
-			+ "        PCT.NUMERO_RITORNO_VRS,\r\n"
-			+ "        PCT.TIMESTAMP_CRZ,\r\n"
-			+ "        PCT.STATO_UDC,\r\n"
-			+ "        PCR.ID_RIGA_DOC,\r\n"
-			+ "        PCR.TIPO_MISSIONE,\r\n"
-			+ "        YLU.GES_BAIA_PRELIEVO\r\n"
-			+ "    FROM THIPPERS.YPIANO_CARICO_TOYOTA_TES PCT\r\n"
-			+ "    LEFT JOIN LOGIS.LMAPPA_UDC LU\r\n"
-			+ "        ON PCT.R_COD_MAPPA_UDC = LU.CODICE\r\n"
-			+ "    LEFT JOIN THIPPERS.YLUBICAZIONE YLU\r\n"
-			+ "        ON LU.COD_MAG_FISICO = YLU.COD_MAG_FISICO\r\n"
-			+ "       AND LU.COD_UBICAZIONE = YLU.CODICE\r\n"
-			+ "    OUTER APPLY (\r\n"
-			+ "        SELECT TOP (1)\r\n"
-			+ "            PCR.ID_RIGA_DOC,\r\n"
-			+ "            PCR.TIPO_MISSIONE\r\n"
-			+ "        FROM THIPPERS.YPIANO_CARICO_TOYOTA_RIG PCR\r\n"
-			+ "        WHERE PCR.ID_AZIENDA    = PCT.ID_AZIENDA\r\n"
-			+ "          AND PCR.ID_ANNO_DOC   = PCT.ID_ANNO_DOC\r\n"
-			+ "          AND PCR.ID_NUMERO_DOC = PCT.ID_NUMERO_DOC\r\n"
-			+ "        ORDER BY PCR.ID_RIGA_DOC\r\n"
-			+ "    ) PCR\r\n"
-			+ "    WHERE\r\n"
-			+ "        PCT.ID_AZIENDA = ? \r\n"
-			+ "        AND PCT.STATO_UDC IN ('0', '3')\r\n"
-			+ "        AND PCT.STATO_GESTIONE = 'A'\r\n"
-			+ "        AND EXISTS (\r\n"
-			+ "            SELECT 1\r\n"
-			+ "            FROM THIPPERS.YAGV_BUFFER_TES A\r\n"
-			+ "            WHERE A.ID_AZIENDA = PCT.ID_AZIENDA\r\n"
-			+ "              AND (PCT.R_REPARTO = A.R_REPARTO_1\r\n"
-			+ "               OR  PCT.R_REPARTO = A.R_REPARTO_2)\r\n"
-			+ "        )\r\n"
-			+ "        AND (PCT.STATO_UDC <> '0'\r\n"
-			+ "             OR YLU.GES_BAIA_PRELIEVO = 'N')\r\n"
-			+ "),\r\n"
-			+ "ALT AS (\r\n"
-			+ "    SELECT\r\n"
-			+ "        *,\r\n"
-			+ "        ROW_NUMBER() OVER (\r\n"
-			+ "            PARTITION BY\r\n"
-			+ "                R_REPARTO,\r\n"
-			+ "                NUMERO_RITORNO_VRS,\r\n"
-			+ "                TIPO_MISSIONE\r\n"
-			+ "            ORDER BY\r\n"
-			+ "                TIMESTAMP_CRZ,\r\n"
-			+ "                ID_RIGA_DOC\r\n"
-			+ "        ) AS RN_TIPO\r\n"
-			+ "    FROM BASE\r\n"
-			+ ")\r\n"
-			+ "SELECT *\r\n"
-			+ "FROM ALT\r\n"
-			+ "ORDER BY\r\n"
-			+ "    R_REPARTO,\r\n"
-			+ "    NUMERO_RITORNO_VRS,\r\n"
-			+ "    RN_TIPO;";
-	/*			"SELECT "
-					+ "	* "
-					+ "FROM "
-					+ "	THIPPERS.YPIANO_CARICO_TOYOTA_TES PCT "
-					+ "LEFT OUTER JOIN LOGIS.LMAPPA_UDC LU ON \r\n"
-					+ "PCT.R_COD_MAPPA_UDC = LU.CODICE \r\n"
-					+ "LEFT OUTER JOIN THIPPERS.YLUBICAZIONE YLU ON \r\n"
-					+ "LU.COD_MAG_FISICO = YLU.COD_MAG_FISICO \r\n"
-					+ "AND LU.COD_UBICAZIONE  = YLU.CODICE "
-					+ "WHERE PCT.ID_AZIENDA = ? "
-					+ "AND PCT.STATO_UDC IN ('"+StatoPrelievoUdcToyota.STATO_INIZIALE+"','"+StatoPrelievoUdcToyota.PRONTA_PER_REINTEGRO+"') "
-					+ "AND STATO_GESTIONE = '"+TipoGestioneUbicazione.AGV+"' "
-					+ "AND EXISTS ( "
-					+ "        SELECT 1 "
-					+ "        FROM THIPPERS.YAGV_BUFFER_TES A "
-					+ "        WHERE A.ID_AZIENDA = PCT.ID_AZIENDA "
-					+ "          AND (PCT.R_REPARTO = A.R_REPARTO_1 OR PCT.R_REPARTO = A.R_REPARTO_2) "
-					+ "    ) "
-					+ " AND (PCT.STATO_UDC <> '0' OR YLU.GES_BAIA_PRELIEVO = 'N' ) "//72197 AGOSF3 aggiungo nei buffer solo PC la cui UDC è in scansia
-					+ " ORDER BY TIMESTAMP_CRZ ASC, PCT.R_REPARTO , PCT.NUMERO_RITORNO_VRS ; ";//72274 aggiunto ordinamento sul numero di ritorno 
-	 */
+	protected static final String SELECT_PIANI_CARICO_NON_SCHEDUL = String.join("\n",
+		    "SELECT",
+		    "    PCT.ID_AZIENDA,",
+		    "    PCT.ID_ANNO_DOC,",
+		    "    PCT.ID_NUMERO_DOC,",
+		    "    MIN(OE.DATA_ORDINE) AS DATA_ORDINE",
+		    "FROM THIPPERS.YPIANO_CARICO_TOYOTA_TES PCT",
+
+		    "LEFT OUTER JOIN LOGIS.LMAPPA_UDC LU",
+		    "    ON PCT.R_COD_MAPPA_UDC = LU.CODICE",
+
+		    "LEFT OUTER JOIN THIPPERS.YLUBICAZIONE YLU",
+		    "    ON LU.COD_MAG_FISICO = YLU.COD_MAG_FISICO",
+		    "   AND LU.COD_UBICAZIONE = YLU.CODICE",
+
+		    "LEFT OUTER JOIN THIPPERS.YPIANO_CARICO_TOYOTA_RIG PCR",
+		    "    ON PCT.ID_AZIENDA = PCR.ID_AZIENDA",
+		    "   AND PCT.ID_ANNO_DOC = PCR.ID_ANNO_DOC",
+		    "   AND PCT.ID_NUMERO_DOC = PCR.ID_NUMERO_DOC",
+
+		    "LEFT OUTER JOIN THIP.ORD_ESEC OE",
+		    "    ON OE.ID_AZIENDA = PCR.ID_AZIENDA",
+		    "   AND OE.ID_ANNO_ORD = PCR.ID_ANNO_ORDINE_RIGA_MAT",
+		    "   AND OE.ID_NUMERO_ORD = PCR.ID_NUMERO_ORD_RIGA_MAT",
+
+		    "WHERE PCT.ID_AZIENDA = ?",
+		    "  AND PCT.STATO_UDC IN ('"+StatoPrelievoUdcToyota.STATO_INIZIALE+"','"+StatoPrelievoUdcToyota.PRONTA_PER_REINTEGRO+"') ",
+		    "  AND STATO_GESTIONE = '"+TipoGestioneUbicazione.AGV+"' ",
+		    "  AND PCR.STATO_PRL_RIGA < " + StatoPrelievoRigaToyota.PRELEVATA + " ",
+
+		    "  AND EXISTS (",
+		    "        SELECT 1",
+		    "        FROM THIPPERS.YAGV_BUFFER_TES A",
+		    "        WHERE A.ID_AZIENDA = PCT.ID_AZIENDA",
+		    "          AND (",
+		    "                PCT.R_REPARTO = A.R_REPARTO_1",
+		    "             OR PCT.R_REPARTO = A.R_REPARTO_2",
+		    "          )",
+		    "  )",
+
+		    "  AND (",
+		    "        PCT.STATO_UDC <> '0'",
+		    "     OR YLU.GES_BAIA_PRELIEVO = 'N'",
+		    "  )",
+
+		    "GROUP BY",
+		    "    PCT.ID_AZIENDA,",
+		    "    PCT.ID_ANNO_DOC,",
+		    "    PCT.ID_NUMERO_DOC",
+
+		    "ORDER BY MIN(OE.DATA_ORDINE) ASC"
+		);
+
 	protected static CachedStatement cSelectPianiCaricoNonSchedul = new CachedStatement(SELECT_PIANI_CARICO_NON_SCHEDUL);
 
 	protected static String ServSchedTerm1=ResourceLoader.getString(RES, "ServSchedTerm1");
