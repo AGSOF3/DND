@@ -103,7 +103,7 @@ public class YSchedulazioneBufferAgv extends BatchRunnable implements Authorizab
 		    "WHERE PCT.ID_AZIENDA = ?",
 		    "  AND PCT.STATO_UDC IN ('"+StatoPrelievoUdcToyota.STATO_INIZIALE+"','"+StatoPrelievoUdcToyota.PRONTA_PER_REINTEGRO+"') ",
 		    "  AND STATO_GESTIONE = '"+TipoGestioneUbicazione.AGV+"' ",
-		    "  AND PCR.STATO_PRL_RIGA < " + StatoPrelievoRigaToyota.PRELEVATA + " ",
+//		    "  AND PCR.STATO_PRL_RIGA < " + StatoPrelievoRigaToyota.PRELEVATA + " ",
 
 		    "  AND EXISTS (",
 		    "        SELECT 1",
