@@ -1,0 +1,34 @@
+<tfml>
+  <generator type="form"/>
+  <form classHdr="PsnDatiDnd"
+    name="PsnDatiDndForm"
+    locktype="nolock"
+    errorList="yes" menubar="yes" toolbar="yes" submitReset="none"
+    jsLibraryName="it/dnd/thip/base/PsnDatiDnd.js"
+    onLoadPresent="yes"
+    webFormModifierClass="it.dnd.thip.base.web.PsnDatiDndFormModifier"
+    header="com.thera.thermfw.common.Header.jsp"
+    footer="com.thera.thermfw.common.Footer.jsp">
+    <menubar  name="myMenuBar">
+      <import file="it/thera/thip/cs/defObjMenu.tfml"/>
+    </menubar>
+    <toolbar name="myToolBar" imgwidth="16" imgheight="16">
+      <import file="it/thera/thip/cs/defObjMenu.tfml"/>
+    </toolbar>
+    <tabbed name="mytabbed" height="100%" width="100%">
+      <tab name="tab1" resourceFile="it.dnd.thip.base.resources.PsnDatiDnd" resourceID="tab1">
+        <multisearchform name="MagazzinoScartiDP" classRD="MagazzinoScartiDP"/>
+        <editgrid name="CollegamentoMagPrlMagScr" classCD="CollegamentoMagPrlMagScr" type="include">
+        </editgrid>
+        <multisearchform name="SerieODP" classRD="SerieODP" additionalfields="1"/>
+        <multisearchform name="AttivitaODP" classRD="AttivitaODP"/>
+        <multisearchform name="UbicazioneScaricoDefault" classRD="UbicazioneScaricoDefault" additionalfields="1"/>
+        
+        <multisearchform name="SerieDocGnr" classRD="SerieDocGnr" additionalfields="1"/>
+        <multisearchform name="CauDocGenRiallLogis" classRD="CauDocGenRiallLogis"/>
+        
+      </tab>
+    </tabbed>
+  </form>
+</tfml>
+

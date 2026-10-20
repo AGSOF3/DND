@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE TDDML SYSTEM "../../../TDDML.dtd">
+<TDDML>
+  <AlterTable schema="THIPPERS" name="PSN_DATI_DND">
+    <AddColumn>
+       <Column name="NMRT_DOC_GNR_RIALL_LOGIS" shortname="NMRT_DOC_GN" type="char" length="15" nullable="yes"/>
+       <Column name="SERIE_DOC_GNR_RIALL_LOGIS" shortname="SR_DOC_GN" type="char" length="2" nullable="yes"/>
+	   <Column name="R_CAU_DOC_GNR_RIALL_LOGIS" shortname="CAU_DOC_GN" type="char" length="3" nullable="yes"/>
+    </AddColumn>
+  </AlterTable>
+</TDDML>
