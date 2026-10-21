@@ -16,59 +16,132 @@ import com.thera.thermfw.collector.BODataCollector;
 import com.thera.thermfw.common.ErrorMessage;
 import com.thera.thermfw.gui.cnr.OpenType;
 import com.thera.thermfw.persist.CachedStatement;
-import com.thera.thermfw.persist.ConnectionManager;
-import com.thera.thermfw.persist.Database;
 import com.thera.thermfw.persist.Factory;
 import com.thera.thermfw.persist.KeyHelper;
-import com.thera.thermfw.persist.PersistentObject;
 
 import it.dnd.thip.base.PsnDatiDnd;
-import it.thera.thip.base.articolo.Articolo;
 import it.thera.thip.base.azienda.Azienda;
-import it.thera.thip.base.dipendente.web.DatiWebArticolo;
 import it.thera.thip.base.documenti.StatoAvanzamento;
 import it.thera.thip.base.documenti.web.DocumentoDataCollector;
 import it.thera.thip.base.generale.UnitaMisura;
 import it.thera.thip.logis.lgb.GestioneMagazzino;
 import it.thera.thip.logis.lgb.GestioneMagazzinoTM;
+import it.thera.thip.magazzino.documenti.CausaleDocumentoGen;
+import it.thera.thip.magazzino.documenti.CausaleRigaDocGen;
 import it.thera.thip.magazzino.documenti.DocMagGenRigaLotto;
 import it.thera.thip.magazzino.documenti.DocMagGenerico;
 import it.thera.thip.magazzino.documenti.DocMagGenericoRiga;
+import it.thera.thip.magazzino.movimenti.CausaleMovimentoMagazzino;
+
+/**
+ * Batch di riallineamento delle giacenze Panthera rispetto alle giacenze Logis
+ * per l'azienda e il magazzino selezionati.
+ *
+ * <p>Confronta le quantità presenti in {@code LOGIS.LSALDO} e
+ * {@code THIP.SALDI_LOTTO}, raggruppate per azienda, magazzino, articolo,
+ * lotto e versione. Per ogni differenza rilevata genera una riga di un
+ * documento generico di magazzino.</p>
+ *
+ * <p>La quantità di rettifica è calcolata come giacenza Logis meno giacenza
+ * Panthera. Le differenze positive utilizzano la causale di riga {@code RPL},
+ * quelle negative la causale {@code RNL}; le quantità delle righe sono
+ * espresse in valore assoluto.</p>
+ *
+ * <p>Serie e causale di testata sono recuperate dalla personalizzazione
+ * {@code PsnDatiDnd}. Le righe vengono validate singolarmente e salvate
+ * attraverso il salvataggio finale della testata.</p>
+ *
+ * <p>In assenza di differenze non viene creato alcun documento.</p>
+ *
+ * <p>
+ * Company: Softre Solutions<br>
+ * Author: Andrea Gatta<br>
+ * Date: 21/10/2026
+ * </p>
+ */
+
+/*
+ * Revisions:
+ * Number   Date        Owner    Description
+ * 72702    21/10/2026  AGSOF3   Prima stesura
+ */
 
 public class YRiallGiacLogis extends BatchRunnable {
 
 	protected String iIdAzienda;
 	protected String iIdMagazzino;
 
-	protected static final String STMT_QTA_RETTIFICA = "WITH GIACENZE_LOGIS AS (\r\n" + "    SELECT\r\n"
-			+ "        COD_SOCIETA AS ID_AZIENDA,\r\n" + "        COD_MAG_LOGICO AS ID_MAGAZZINO,\r\n"
-			+ "        COD_ARTICOLO AS ID_ARTICOLO,\r\n" + "        COALESCE(LOTTO01, '-') AS ID_LOTTO,\r\n"
-			+ "        CASE\r\n" + "            WHEN VERSIONE = '.' THEN '1'\r\n" + "            ELSE VERSIONE\r\n"
-			+ "        END AS ID_VERSIONE,\r\n" + "        SUM(QTA1) AS GIACENZA_LOGIS\r\n" + "    FROM\r\n"
-			+ "        LOGIS.LSALDO\r\n" + "    WHERE\r\n" + "        COD_SOCIETA = ?\r\n"
-			+ "        AND COD_MAG_LOGICO = ?\r\n" + "    GROUP BY\r\n" + "        COD_SOCIETA,\r\n"
-			+ "        COD_MAG_LOGICO,\r\n" + "        COD_ARTICOLO,\r\n" + "        COALESCE(LOTTO01, '-'),\r\n"
-			+ "        CASE\r\n" + "            WHEN VERSIONE = '.' THEN '1'\r\n" + "            ELSE VERSIONE\r\n"
-			+ "        END\r\n" + "),\r\n" + "GIACENZE_THIP AS (\r\n" + "    SELECT\r\n" + "        ID_AZIENDA,\r\n"
-			+ "        ID_MAGAZZINO,\r\n" + "        ID_ARTICOLO,\r\n" + "        ID_LOTTO,\r\n"
-			+ "        ID_VERSIONE,\r\n" + "        SUM(QTA_GIAC_PRM) AS GIACENZA_THIP\r\n" + "    FROM\r\n"
-			+ "        THIP.SALDI_LOTTO\r\n" + "    WHERE\r\n" + "        ID_AZIENDA = ?\r\n"
-			+ "        AND ID_MAGAZZINO = ?\r\n" + "    GROUP BY\r\n" + "        ID_AZIENDA,\r\n"
-			+ "        ID_MAGAZZINO,\r\n" + "        ID_ARTICOLO,\r\n" + "        ID_LOTTO,\r\n"
-			+ "        ID_VERSIONE\r\n" + ")\r\n" + "SELECT\r\n"
+	protected static final String STMT_QTA_RETTIFICA = "WITH GIACENZE_LOGIS AS (\r\n"
+			+ "    SELECT\r\n"
+			+ "        COD_SOCIETA AS ID_AZIENDA,\r\n"
+			+ "        COD_MAG_LOGICO AS ID_MAGAZZINO,\r\n"
+			+ "        COD_ARTICOLO AS ID_ARTICOLO,\r\n"
+			+ "        COALESCE(LOTTO01, '-') AS ID_LOTTO,\r\n"
+			+ "        CASE\r\n"
+			+ "            WHEN VERSIONE = '.' THEN '1'\r\n"
+			+ "            ELSE VERSIONE\r\n"
+			+ "        END AS ID_VERSIONE,\r\n"
+			+ "        SUM(QTA1) AS GIACENZA_LOGIS\r\n"
+			+ "    FROM\r\n"
+			+ "        LOGIS.LSALDO\r\n"
+			+ "    WHERE\r\n"
+			+ "        COD_SOCIETA = ?\r\n"
+			+ "        AND COD_MAG_LOGICO = ?\r\n"
+			+ "    GROUP BY\r\n"
+			+ "        COD_SOCIETA,\r\n"
+			+ "        COD_MAG_LOGICO,\r\n"
+			+ "        COD_ARTICOLO,\r\n"
+			+ "        COALESCE(LOTTO01, '-'),\r\n"
+			+ "        CASE\r\n"
+			+ "            WHEN VERSIONE = '.' THEN '1'\r\n"
+			+ "            ELSE VERSIONE\r\n"
+			+ "        END\r\n"
+			+ "),\r\n"
+			+ "GIACENZE_THIP AS (\r\n"
+			+ "    SELECT\r\n"
+			+ "        ID_AZIENDA,\r\n"
+			+ "        ID_MAGAZZINO,\r\n"
+			+ "        ID_ARTICOLO,\r\n"
+			+ "        ID_LOTTO,\r\n"
+			+ "        ID_VERSIONE,\r\n"
+			+ "        SUM(QTA_GIAC_PRM) AS GIACENZA_THIP\r\n"
+			+ "    FROM\r\n"
+			+ "        THIP.SALDI_LOTTO\r\n"
+			+ "    WHERE\r\n"
+			+ "        ID_AZIENDA = ?\r\n"
+			+ "        AND ID_MAGAZZINO = ?\r\n"
+			+ "    GROUP BY\r\n"
+			+ "        ID_AZIENDA,\r\n"
+			+ "        ID_MAGAZZINO,\r\n"
+			+ "        ID_ARTICOLO,\r\n"
+			+ "        ID_LOTTO,\r\n"
+			+ "        ID_VERSIONE\r\n"
+			+ ")\r\n"
+			+ "SELECT\r\n"
 			+ "    COALESCE(L.ID_AZIENDA, T.ID_AZIENDA) AS ID_AZIENDA,\r\n"
 			+ "    COALESCE(L.ID_MAGAZZINO, T.ID_MAGAZZINO) AS ID_MAGAZZINO,\r\n"
 			+ "    COALESCE(L.ID_ARTICOLO, T.ID_ARTICOLO) AS ID_ARTICOLO,\r\n"
 			+ "    COALESCE(L.ID_LOTTO, T.ID_LOTTO) AS ID_LOTTO,\r\n"
 			+ "    COALESCE(L.ID_VERSIONE, T.ID_VERSIONE) AS ID_VERSIONE,\r\n"
 			+ "    COALESCE(L.GIACENZA_LOGIS, 0) AS GIACENZA_LOGIS,\r\n"
-			+ "    COALESCE(T.GIACENZA_THIP, 0) AS GIACENZA_THIP,\r\n" + "    COALESCE(L.GIACENZA_LOGIS, 0)\r\n"
-			+ "        - COALESCE(T.GIACENZA_THIP, 0) AS QTA_RETTIFICA\r\n" + "FROM\r\n" + "    GIACENZE_LOGIS L\r\n"
-			+ "FULL OUTER JOIN GIACENZE_THIP T ON\r\n" + "    L.ID_AZIENDA = T.ID_AZIENDA\r\n"
-			+ "    AND L.ID_MAGAZZINO = T.ID_MAGAZZINO\r\n" + "    AND L.ID_ARTICOLO = T.ID_ARTICOLO\r\n"
-			+ "    AND L.ID_LOTTO = T.ID_LOTTO\r\n" + "    AND L.ID_VERSIONE = T.ID_VERSIONE\r\n" + "WHERE\r\n"
-			+ "    COALESCE(L.GIACENZA_LOGIS, 0) <> COALESCE(T.GIACENZA_THIP, 0)\r\n" + "ORDER BY\r\n"
-			+ "    ID_MAGAZZINO,\r\n" + "    ID_ARTICOLO,\r\n" + "    ID_LOTTO,\r\n" + "    ID_VERSIONE";
+			+ "    COALESCE(T.GIACENZA_THIP, 0) AS GIACENZA_THIP,\r\n"
+			+ "    COALESCE(L.GIACENZA_LOGIS, 0)\r\n"
+			+ "        - COALESCE(T.GIACENZA_THIP, 0) AS QTA_RETTIFICA\r\n"
+			+ "FROM\r\n"
+			+ "    GIACENZE_LOGIS L\r\n"
+			+ "FULL OUTER JOIN GIACENZE_THIP T ON\r\n"
+			+ "    L.ID_AZIENDA = T.ID_AZIENDA\r\n"
+			+ "    AND L.ID_MAGAZZINO = T.ID_MAGAZZINO\r\n"
+			+ "    AND L.ID_ARTICOLO = T.ID_ARTICOLO\r\n"
+			+ "    AND L.ID_LOTTO = T.ID_LOTTO\r\n"
+			+ "    AND L.ID_VERSIONE = T.ID_VERSIONE\r\n"
+			+ "WHERE\r\n"
+			+ "    COALESCE(L.GIACENZA_LOGIS, 0) <> COALESCE(T.GIACENZA_THIP, 0)\r\n"
+			+ "ORDER BY\r\n"
+			+ "    ID_MAGAZZINO,\r\n"
+			+ "    ID_ARTICOLO,\r\n"
+			+ "    ID_LOTTO,\r\n"
+			+ "    ID_VERSIONE";
 
 	protected static CachedStatement cStmtQtaRettifica = new CachedStatement(STMT_QTA_RETTIFICA);
 
@@ -92,6 +165,22 @@ public class YRiallGiacLogis extends BatchRunnable {
 		setIdAzienda(Azienda.getAziendaCorrente());
 	}
 
+	/**
+	 * Esegue il confronto delle giacenze e genera il documento di rettifica.
+	 *
+	 * <p>Valorizza i parametri della query con l'azienda e il magazzino selezionati.
+	 * Al primo record con quantità di rettifica diversa da zero crea la testata;
+	 * per ogni record successivo crea e aggiunge una riga con articolo, versione,
+	 * lotto, causale determinata dal segno e quantità assoluta.</p>
+	 *
+	 * <p>Al termine della lettura chiude il risultato della query e salva
+	 * il documento completo delle righe. L'esito dell'elaborazione viene
+	 * riportato nell'output del batch.</p>
+	 *
+	 * @return {@code true} se l'elaborazione termina correttamente, anche in
+	 *         assenza di differenze; {@code false} in caso di errore
+	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	protected boolean run() {
 		try {
@@ -99,9 +188,16 @@ public class YRiallGiacLogis extends BatchRunnable {
 
 			String idSerie = psnDatiDND.getSerieDocGnrRiallLogis();
 			String idCausaleTes = psnDatiDND.getRCauDocGnrRiallLogis();
-			String idCausalePositiva = "RPL";
-			String idCausaleNegativa = "RNL";
-
+			String idCausalePositiva = null;
+			String idCausaleNegativa = null;
+			CausaleDocumentoGen cauTes = CausaleDocumentoGen.elementWithKey(getIdAzienda()+KeyHelper.KEY_SEPARATOR+idCausaleTes, 0);
+			for(CausaleRigaDocGen cauRiga : ((List<CausaleRigaDocGen>)cauTes.getCausaliRiga())){
+				if(cauRiga.getCausaleMovMagazzino().getQtaGiacenza() == CausaleMovimentoMagazzino.SOMMA)
+					idCausalePositiva = cauRiga.getIdCausale();
+				else if(cauRiga.getCausaleMovMagazzino().getQtaGiacenza() == CausaleMovimentoMagazzino.SOTTRAE)
+					idCausaleNegativa = cauRiga.getIdCausale();
+			}
+			
 			DocumentoDataCollector docDC = null;
 			DocMagGenerico doc = null;
 
@@ -177,6 +273,23 @@ public class YRiallGiacLogis extends BatchRunnable {
 		}
 	}
 
+	/**
+	 * Crea e salva la testata del documento generico di rettifica senza salvarne
+	 * le righe e senza eseguire il commit tramite il data collector.
+	 *
+	 * <p>Inizializza il data collector e i servizi di sicurezza per un nuovo
+	 * documento. Imposta l'azienda e il magazzino selezionati, la data corrente,
+	 * la serie e la causale di testata ricevute.</p>
+	 *
+	 * <p>Il data collector restituito viene utilizzato per il successivo
+	 * salvataggio del documento completo delle righe.</p>
+	 *
+	 * @param idSerie identificativo della serie di numerazione del documento
+	 * @param idCausaleTes identificativo della causale di testata
+	 * @return data collector associato alla testata creata
+	 * @throws Exception se l'inizializzazione o il salvataggio della testata
+	 *                   non termina correttamente
+	 */
 	protected DocumentoDataCollector creaDocGenTestata(
 			String idSerie,
 			String idCausaleTes) throws Exception {
@@ -223,6 +336,35 @@ public class YRiallGiacLogis extends BatchRunnable {
 		return docDC;
 	}
 
+	/**
+	 * Crea e valida una riga del documento generico per una differenza di giacenza.
+	 *
+	 * <p>Associa la riga alla testata e imposta azienda, magazzino, data di
+	 * registrazione, causale, articolo e versione. Recupera dall'articolo le
+	 * unità di misura e, se prevista, calcola la quantità secondaria mediante
+	 * la conversione arrotondata.</p>
+	 *
+	 * <p>Per gli articoli gestiti a lotti crea il dettaglio lotto con le
+	 * medesime quantità della riga. Imposta lo stato di avanzamento a
+	 * {@code DEFINITIVO} ed esegue i controlli del data collector.</p>
+	 *
+	 * <p>La riga restituita non viene salvata né aggiunta alla collezione della
+	 * testata da questo metodo: entrambe le operazioni sono gestite dal chiamante.</p>
+	 *
+	 * @param testata documento generico a cui associare la riga
+	 * @param idArticolo identificativo dell'articolo da rettificare
+	 * @param idVersione versione dell'articolo da rettificare
+	 * @param idLotto identificativo del lotto, obbligatorio per articoli
+	 *                gestiti a lotti
+	 * @param idCausaleRig causale di rettifica positiva o negativa
+	 * @param quantita quantità di rettifica in unità di misura primaria,
+	 *                 espressa in valore assoluto e maggiore di zero
+	 * @return riga creata e validata, non ancora salvata
+	 * @throws Exception se l'inizializzazione non riesce, l'articolo non esiste,
+	 *                   manca l'unità di misura primaria, manca un lotto
+	 *                   obbligatorio oppure la validazione della riga fallisce
+	 */
+	@SuppressWarnings("unchecked")
 	protected DocMagGenericoRiga creaDocGenRiga(
 			DocMagGenerico testata,
 			String idArticolo,
@@ -385,6 +527,7 @@ public class YRiallGiacLogis extends BatchRunnable {
 						: "Errore durante la validazione o il salvataggio.";
 	}
 
+	@SuppressWarnings("unchecked")
 	public ErrorMessage checkIdMagazzino() {
 		if (getIdMagazzino() != null) {
 			String where = GestioneMagazzinoTM.COD_SOCIETA + " = '" + getIdAzienda() + "' " + "AND "
