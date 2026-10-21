@@ -1,2 +1,0 @@
-# Classe: JOB
-    INSERT INTO <SCH>JOB (JOB_ID,DESCRIPTION,TASK_ID,ENTITY_ID,EXECUTION_MODE,EXEC_MODE_CHG,BATCH_QUEUE_ID,BATCH_QUEUE_CHG,PRIORITY,SCHEDULABILITY) VALUES ('YRiallGiacLogis', 'Riallineamento giacenze logis', 'RUN', 'YRiallGiacLogis', 'P', 'Y', 'DefQueue', 'Y', 8, 'S');
